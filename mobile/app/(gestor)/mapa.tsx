@@ -27,16 +27,16 @@ if (Platform.OS !== 'web') {
 }
 
 const BAIRRO_COORDS: Record<string, { latitude: number; longitude: number }> = {
-  'Boa Viagem':    { latitude: -8.1192, longitude: -34.9011 },
+  'Boa Viagem': { latitude: -8.1192, longitude: -34.9011 },
   'Recife Antigo': { latitude: -8.0628, longitude: -34.8711 },
-  'Casa Amarela':  { latitude: -8.0242, longitude: -34.9202 },
-  'Aflitos':       { latitude: -8.0492, longitude: -34.9002 },
-  'Graças':        { latitude: -8.0532, longitude: -34.9042 },
-  'Espinheiro':    { latitude: -8.0452, longitude: -34.9022 },
-  'Torre':         { latitude: -8.0782, longitude: -34.9102 },
-  'Boa Vista':     { latitude: -8.0648, longitude: -34.8831 },
-  'Água Fria':     { latitude: -7.9972, longitude: -34.9202 },
-  'Várzea':        { latitude: -8.0552, longitude: -34.9502 },
+  'Casa Amarela': { latitude: -8.0242, longitude: -34.9202 },
+  'Aflitos': { latitude: -8.0492, longitude: -34.9002 },
+  'Graças': { latitude: -8.0532, longitude: -34.9042 },
+  'Espinheiro': { latitude: -8.0452, longitude: -34.9022 },
+  'Torre': { latitude: -8.0782, longitude: -34.9102 },
+  'Boa Vista': { latitude: -8.0648, longitude: -34.8831 },
+  'Água Fria': { latitude: -7.9972, longitude: -34.9202 },
+  'Várzea': { latitude: -8.0552, longitude: -34.9502 },
 };
 
 const DEFAULT_COORDS = { latitude: -8.0578, longitude: -34.9029 };
@@ -54,7 +54,7 @@ const TIPO_COLORS: Record<string, string> = {
 // Status reais do backend
 const SITUACAO_CONFIG: Record<string, { label: string; color: string }> = {
   'Em Andamento': { label: 'Em Andamento', color: '#3B82F6' },
-  'Resolvido':    { label: 'Resolvido',    color: '#10B981' },
+  'Resolvido': { label: 'Resolvido', color: '#10B981' },
 };
 
 function getCoords(bairro: string) {
@@ -82,7 +82,7 @@ function WebMapFallback({ denuncias, onSelect }: { denuncias: Denuncia[]; onSele
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16 }}>
       <View style={webStyles.notice}>
         <Ionicons name="information-circle-outline" size={18} color="#6498c9" />
-        <Text style={webStyles.noticeText}>Mapa interativo disponível apenas no app mobile. Abaixo, a lista de ocorrências por bairro.</Text>
+        <Text style={webStyles.noticeText}>lista de ocorrências por bairro.</Text>
       </View>
 
       {Object.entries(byBairro).map(([bairro, items]) => (
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
-  filtroOptionActive: { },
+  filtroOptionActive: {},
   filtroOptionText: { flex: 1, fontSize: 15, color: '#374151' },
   filtroOptionTextActive: { color: '#6498c9', fontWeight: '700' },
   typeDot: { width: 10, height: 10, borderRadius: 5 },

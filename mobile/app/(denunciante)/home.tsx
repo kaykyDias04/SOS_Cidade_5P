@@ -120,7 +120,13 @@ export default function HomeDenuncianteScreen() {
             minhasDenuncias.map((d) => {
               const sit = getSituacao(d.situacao);
               return (
-                <View key={d.id} style={styles.denunciaCard}>
+                <TouchableOpacity
+                  key={d.id}
+                  style={styles.denunciaCard}
+                  onPress={() => router.push(`/detalhe-denuncia?id=${d.id}`)}
+                  accessibilityLabel={`Ver detalhes de ${d.tipoDenuncia}`}
+                  activeOpacity={0.75}
+                >
                   <View style={styles.denunciaHeader}>
                     <Text style={styles.denunciaTipo}>{d.tipoDenuncia}</Text>
                     <View style={[styles.badge, { backgroundColor: sit.bg }]}>
@@ -133,7 +139,11 @@ export default function HomeDenuncianteScreen() {
                     <Text style={styles.denunciaInfo}>{d.bairroOcorrencia}</Text>
                     <Text style={styles.denunciaProtocolo}>#{d.protocolo}</Text>
                   </View>
-                </View>
+                  <View style={styles.verMaisRow}>
+                    <Text style={styles.verMaisText}>Ver detalhes</Text>
+                    <Ionicons name="chevron-forward" size={13} color="#6498c9" />
+                  </View>
+                </TouchableOpacity>
               );
             })
           )}
@@ -192,6 +202,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
     borderWidth: 1, borderColor: '#f0f4f8',
   },
+  verMaisRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 2, marginTop: 8 },
+  verMaisText: { fontSize: 12, color: '#6498c9', fontWeight: '700' },
   denunciaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   denunciaTipo: { fontSize: 14, fontWeight: '700', color: '#1e3a5f', flex: 1, marginRight: 8 },
   badge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3 },

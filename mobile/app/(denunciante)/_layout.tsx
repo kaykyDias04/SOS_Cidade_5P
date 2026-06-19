@@ -45,6 +45,12 @@ export default function DenuncianteLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="detalhe-denuncia"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

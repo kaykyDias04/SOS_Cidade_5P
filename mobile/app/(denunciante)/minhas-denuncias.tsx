@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
 import { Denuncia } from '@/lib/api';
@@ -21,6 +22,7 @@ const SITUACAO_CONFIG: Record<string, { bg: string; text: string; label: string;
 };
 
 export default function MinhasDenunciasScreen() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const { denuncias, loading, fetchDenuncias } = useDenunciasStore();
   const [search, setSearch] = useState('');
@@ -48,7 +50,12 @@ export default function MinhasDenunciasScreen() {
   const renderItem = ({ item }: { item: Denuncia }) => {
     const sit = getSituacao(item.situacao);
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push(`/detalhe-denuncia?id=${item.id}`)}
+        accessibilityLabel={`Ver detalhes de ${item.tipoDenuncia}`}
+        activeOpacity={0.75}
+      >
         <View style={styles.cardHeader}>
           <View style={styles.tipoRow}>
             <View style={styles.tipoDot} />
@@ -73,7 +80,11 @@ export default function MinhasDenunciasScreen() {
           </View>
           <Text style={styles.protocoloText}>#{item.protocolo}</Text>
         </View>
-      </View>
+        <View style={styles.verMaisRow}>
+          <Text style={styles.verMaisText}>Ver detalhes</Text>
+          <Ionicons name="chevron-forward" size={14} color="#6498c9" />
+        </View>
+      </TouchableOpacity>
     );
   };
 
@@ -183,6 +194,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
     borderWidth: 1, borderColor: '#f0f4f8',
   },
+  verMaisRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 2, marginTop: 10 },
+  verMaisText: { fontSize: 12, color: '#6498c9', fontWeight: '700' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   tipoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   tipoDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#6498c9' },
