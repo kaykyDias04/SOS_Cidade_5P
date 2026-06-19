@@ -92,7 +92,7 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          
+
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => router.back()}
@@ -108,7 +108,7 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.card}>
-            
+
             <View style={styles.field}>
               <Text style={styles.label}>Nome Completo</Text>
               <View style={[styles.inputWrapper, errors.name ? styles.inputError : null]}>
@@ -125,7 +125,7 @@ export default function RegisterScreen() {
               {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
             </View>
 
-            
+
             <View style={styles.field}>
               <Text style={styles.label}>E-mail</Text>
               <View style={[styles.inputWrapper, errors.email ? styles.inputError : null]}>
@@ -145,7 +145,7 @@ export default function RegisterScreen() {
               {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
 
-            
+
             <View style={styles.field}>
               <Text style={styles.label}>Senha</Text>
               <View style={[styles.inputWrapper, errors.password ? styles.inputError : null]}>
@@ -166,7 +166,7 @@ export default function RegisterScreen() {
               {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
-            
+
             <View style={styles.field}>
               <Text style={styles.label}>Confirmar Senha</Text>
               <View style={[styles.inputWrapper, errors.confirmPassword ? styles.inputError : null]}>

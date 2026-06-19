@@ -1,9 +1,11 @@
 import { Tabs, Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DenuncianteLayout() {
   const { isAuthenticated, user } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   if (!isAuthenticated) return <Redirect href="/login" />;
   if (user?.role === 'GESTOR') return <Redirect href="/denuncias" />;
@@ -18,8 +20,8 @@ export default function DenuncianteLayout() {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#f0f4f8',
-          paddingBottom: 6,
-          height: 62,
+          paddingBottom: insets.bottom || 6,
+          height: 62 + (insets.bottom || 0),
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
       }}

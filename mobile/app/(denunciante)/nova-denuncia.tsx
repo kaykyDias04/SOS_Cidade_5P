@@ -144,7 +144,7 @@ export default function NovaDenunciaScreen() {
       if (result) {
         setProtocolo(result.protocolo);
         setShowSuccessModal(true);
-        
+
         setTipoDenuncia('');
         setBairro('');
         setDescricao('');
@@ -162,7 +162,7 @@ export default function NovaDenunciaScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
 
-        
+
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Nova Denúncia</Text>
           <Text style={styles.headerSub}>Relate um problema na sua cidade</Text>
@@ -170,7 +170,7 @@ export default function NovaDenunciaScreen() {
 
         <View style={styles.form}>
 
-          
+
           <View style={styles.field}>
             <Text style={styles.label}>Tipo de Ocorrência *</Text>
             <TouchableOpacity
@@ -186,7 +186,7 @@ export default function NovaDenunciaScreen() {
             {!!errors.tipo && <Text style={styles.errorText}>{errors.tipo}</Text>}
           </View>
 
-          
+
           <View style={styles.field}>
             <Text style={styles.label}>Bairro da Ocorrência *</Text>
             <TouchableOpacity
@@ -205,7 +205,7 @@ export default function NovaDenunciaScreen() {
             {!!errors.bairro && <Text style={styles.errorText}>{errors.bairro}</Text>}
           </View>
 
-          
+
           <View style={styles.field}>
             <Text style={styles.label}>Descrição da Ocorrência *</Text>
             <TextInput
@@ -223,7 +223,7 @@ export default function NovaDenunciaScreen() {
             {!!errors.descricao && <Text style={styles.errorText}>{errors.descricao}</Text>}
           </View>
 
-          
+
           <View style={styles.field}>
             <Text style={styles.label}>Data da Ocorrência</Text>
             <View style={styles.inputRow}>
@@ -239,7 +239,7 @@ export default function NovaDenunciaScreen() {
             </View>
           </View>
 
-          
+
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>Identificar-me</Text>
@@ -253,7 +253,7 @@ export default function NovaDenunciaScreen() {
             />
           </View>
 
-          
+
           <View style={styles.field}>
             <Text style={styles.label}>Imagens (máx. 4)</Text>
             <View style={styles.imageRow}>
@@ -278,7 +278,7 @@ export default function NovaDenunciaScreen() {
             </View>
           </View>
 
-          
+
           <TouchableOpacity
             style={[styles.submitBtn, submitting && styles.submitDisabled]}
             onPress={handleSubmit}
@@ -297,7 +297,7 @@ export default function NovaDenunciaScreen() {
         </View>
       </ScrollView>
 
-      
+
       <Modal visible={showTipoModal} transparent animationType="slide">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -324,7 +324,7 @@ export default function NovaDenunciaScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Bairro Selection Modal */}
+
       <Modal visible={showBairroModal} transparent animationType="slide">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -353,7 +353,7 @@ export default function NovaDenunciaScreen() {
         </TouchableOpacity>
       </Modal>
 
-      
+
       <Modal visible={showSuccessModal} transparent animationType="fade">
         <View style={styles.successOverlay}>
           <View style={styles.successCard}>
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   submitDisabled: { opacity: 0.65 },
   submitText: { color: '#fff', fontWeight: '800', fontSize: 15 },
 
-  
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
     backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   modalOptionText: { fontSize: 15, color: '#374151' },
   modalOptionTextSelected: { color: '#6498c9', fontWeight: '700' },
 
-  
+
   successOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center', justifyContent: 'center', padding: 24,

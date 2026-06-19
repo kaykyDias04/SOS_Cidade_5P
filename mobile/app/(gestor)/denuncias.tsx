@@ -21,7 +21,7 @@ import { useDenunciasStore } from '@/store/useDenunciasStore';
 import { denunciasAPI, Denuncia } from '@/lib/api';
 import { useRouter } from 'expo-router';
 
-// Status reais do backend (Prisma default: "Em Andamento")
+
 const SITUACOES = ['Em Andamento', 'Resolvido'];
 
 const SITUACAO_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
@@ -115,7 +115,7 @@ export default function DenunciasGestorScreen() {
   return (
     <SafeAreaView style={styles.container}>
 
-      {/* Header */}
+
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Denúncias Recentes</Text>
@@ -126,7 +126,7 @@ export default function DenunciasGestorScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Search */}
+
       <View style={styles.searchWrapper}>
         <Ionicons name="search-outline" size={18} color="#9ca3af" />
         <TextInput
@@ -144,7 +144,7 @@ export default function DenunciasGestorScreen() {
         )}
       </View>
 
-      {/* Filter chips — ScrollView horizontal para web compatibility */}
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -167,7 +167,7 @@ export default function DenunciasGestorScreen() {
         })}
       </ScrollView>
 
-      {/* List */}
+
       <FlatList
         data={filtered}
         keyExtractor={(item) => String(item.id)}
@@ -183,7 +183,7 @@ export default function DenunciasGestorScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Detail Modal */}
+
       <Modal visible={showDetail} animationType="slide" presentationStyle="pageSheet">
         {selectedDenuncia && (() => {
           const imgs = parseImagens(selectedDenuncia.imagens);
@@ -221,7 +221,7 @@ export default function DenunciasGestorScreen() {
                   <Text style={styles.detailValue}>{selectedDenuncia.descricaoOcorrencia}</Text>
                 </View>
 
-                {/* Imagens */}
+
                 {imgs.length > 0 && (
                   <View style={styles.detailCard}>
                     <Text style={styles.detailLabel}>Imagens</Text>
@@ -240,7 +240,7 @@ export default function DenunciasGestorScreen() {
                   </View>
                 )}
 
-                {/* Alterar Status */}
+
                 <Text style={styles.detailLabel}>Alterar Status</Text>
                 <View style={{ gap: 8 }}>
                   {SITUACOES.map((s) => {

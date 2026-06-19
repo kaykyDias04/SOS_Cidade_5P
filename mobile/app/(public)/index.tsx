@@ -33,7 +33,6 @@ export default function WelcomeScreen() {
       <StatusBar style="light" />
       <ScrollView showsVerticalScrollIndicator={false}>
 
-
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Logo size={36} />
@@ -47,7 +46,6 @@ export default function WelcomeScreen() {
             <Text style={styles.loginBtnText}>ENTRAR</Text>
           </TouchableOpacity>
         </View>
-
 
         <View style={styles.hero}>
           <View style={styles.heroOverlay}>
@@ -66,7 +64,6 @@ export default function WelcomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Como Funciona</Text>
@@ -89,7 +86,6 @@ export default function WelcomeScreen() {
           </View>
         </View>
 
-
         <View style={styles.privacyCard}>
           <View style={styles.privacyIcon}>
             <Ionicons name="lock-closed" size={36} color="#6498c9" />
@@ -101,7 +97,6 @@ export default function WelcomeScreen() {
             </Text>
           </View>
         </View>
-
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>O que você pode denunciar</Text>
@@ -121,7 +116,6 @@ export default function WelcomeScreen() {
             ))}
           </View>
         </View>
-
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>© 2025 S.O.S Cidade. Todos os direitos reservados.</Text>
@@ -147,7 +141,6 @@ const styles = StyleSheet.create({
     } : {})
   },
 
-
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#fff',
@@ -164,7 +157,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 7,
   },
   loginBtnText: { color: '#6498c9', fontWeight: '700', fontSize: 12 },
-
 
   hero: {
     height: 220, backgroundColor: '#6498c9',
@@ -188,13 +180,11 @@ const styles = StyleSheet.create({
   },
   ctaBtnText: { color: '#fff', fontWeight: '800', fontSize: 13, letterSpacing: 0.5 },
 
-
   section: { paddingHorizontal: 20, paddingVertical: 24 },
   sectionTitle: {
     fontSize: 18, fontWeight: '800', color: '#6498c9',
     marginBottom: 16, textAlign: 'center',
   },
-
 
   stepsRow: { flexDirection: 'column', gap: 16 },
   stepItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
@@ -204,7 +194,6 @@ const styles = StyleSheet.create({
   },
   stepLabel: { fontWeight: '800', color: '#1e3a5f', fontSize: 13, marginBottom: 3 },
   stepDesc: { color: '#4b5563', fontSize: 13, lineHeight: 19, flex: 1 },
-
 
   privacyCard: {
     marginHorizontal: 20, backgroundColor: '#fff', borderRadius: 20,
@@ -219,7 +208,6 @@ const styles = StyleSheet.create({
   privacyText: { flex: 1 },
   privacyTitle: { fontSize: 15, fontWeight: '800', color: '#6498c9', marginBottom: 6 },
   privacyDesc: { fontSize: 13, color: '#4b5563', lineHeight: 19 },
-
 
   grid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 12,
@@ -237,7 +225,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   categoryTitle: { fontSize: 12, fontWeight: '700', color: '#1e3a5f', textAlign: 'center' },
-
 
   footer: { padding: 24, alignItems: 'center' },
   footerText: { color: '#9ca3af', fontSize: 12 },

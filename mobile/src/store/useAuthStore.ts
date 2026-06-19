@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
               id: Number(response.data.user.id),
             };
 
-            
+
             await SecureStore.setItemAsync('authToken', response.data.token);
             await SecureStore.setItemAsync('userRole', mappedRole);
 

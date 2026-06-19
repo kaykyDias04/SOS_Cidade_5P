@@ -45,7 +45,7 @@ export default function DetalheDenunciaScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="Voltar">
           <Ionicons name="arrow-back" size={22} color="#1e3a5f" />
@@ -55,7 +55,7 @@ export default function DetalheDenunciaScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Hero card */}
+
         <View style={[styles.heroCard, { borderLeftColor: cor }]}>
           <View style={{ flex: 1 }}>
             <Text style={styles.heroTipo}>{denuncia.tipoDenuncia}</Text>
@@ -66,7 +66,7 @@ export default function DetalheDenunciaScreen() {
           </View>
         </View>
 
-        {/* Protocolo */}
+
         <View style={styles.protocoloCard}>
           <Ionicons name="shield-checkmark-outline" size={18} color="#6498c9" />
           <View style={{ flex: 1 }}>
@@ -75,7 +75,7 @@ export default function DetalheDenunciaScreen() {
           </View>
         </View>
 
-        {/* Info grid */}
+
         <View style={styles.infoGrid}>
           <InfoItem icon="location-outline" label="Bairro" value={denuncia.bairroOcorrencia} />
           <InfoItem icon="calendar-outline" label="Data da Ocorrência"
@@ -86,7 +86,7 @@ export default function DetalheDenunciaScreen() {
             value={new Date(denuncia.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} />
         </View>
 
-        {/* Descrição */}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Descrição</Text>
           <View style={styles.descCard}>

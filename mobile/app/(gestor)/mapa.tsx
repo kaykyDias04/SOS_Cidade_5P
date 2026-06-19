@@ -15,17 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
 import { Denuncia } from '@/lib/api';
 
-// Importação condicional: react-native-maps só existe no native
-let MapView: any = null;
-let Marker: any = null;
-let Callout: any = null;
-if (Platform.OS !== 'web') {
-  const maps = require('react-native-maps');
-  MapView = maps.default;
-  Marker = maps.Marker;
-  Callout = maps.Callout;
-}
-
 const BAIRRO_COORDS: Record<string, { latitude: number; longitude: number }> = {
   'Boa Viagem': { latitude: -8.1192, longitude: -34.9011 },
   'Recife Antigo': { latitude: -8.0628, longitude: -34.8711 },
@@ -51,7 +40,7 @@ const TIPO_COLORS: Record<string, string> = {
   'Outro': '#6b7280',
 };
 
-// Status reais do backend
+
 const SITUACAO_CONFIG: Record<string, { label: string; color: string }> = {
   'Em Andamento': { label: 'Em Andamento', color: '#3B82F6' },
   'Resolvido': { label: 'Resolvido', color: '#10B981' },
@@ -68,9 +57,9 @@ function getCoords(bairro: string) {
   };
 }
 
-// ─── Web fallback: grouped card list ───────────────────────────────────────
+
 function WebMapFallback({ denuncias, onSelect }: { denuncias: Denuncia[]; onSelect: (d: Denuncia) => void }) {
-  // Group by bairro
+
   const byBairro: Record<string, Denuncia[]> = {};
   denuncias.forEach((d) => {
     const b = d.bairroOcorrencia || 'Sem bairro';
@@ -124,13 +113,38 @@ function WebMapFallback({ denuncias, onSelect }: { denuncias: Denuncia[]; onSele
   );
 }
 
-// ─── Main screen ───────────────────────────────────────────────────────────
+
 export default function MapaScreen() {
   const { denuncias, loading, fetchDenuncias } = useDenunciasStore();
   const [selectedDenuncia, setSelectedDenuncia] = useState<Denuncia | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
   const [showFiltros, setShowFiltros] = useState(false);
+
+
+  const [MapComponents, setMapComponents] = useState<{
+    MapView: any;
+    Marker: any;
+    Callout: any;
+  } | null>(null);
+  const [mapReady, setMapReady] = useState(Platform.OS === 'web');
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      try {
+        const maps = require('react-native-maps');
+        setMapComponents({
+          MapView: maps.default,
+          Marker: maps.Marker,
+          Callout: maps.Callout,
+        });
+      } catch (e) {
+        console.warn('react-native-maps não disponível:', e);
+      } finally {
+        setMapReady(true);
+      }
+    }
+  }, []);
 
   useEffect(() => { fetchDenuncias(); }, []);
 
@@ -145,7 +159,7 @@ export default function MapaScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      {/* Header */}
+
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Mapa de Ocorrências</Text>
@@ -160,7 +174,7 @@ export default function MapaScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Active filter chip */}
+
       {filtroTipo && (
         <View style={styles.filtroAtivo}>
           <View style={[styles.filtroChip, { backgroundColor: (TIPO_COLORS[filtroTipo] || '#6498c9') + '22', borderColor: TIPO_COLORS[filtroTipo] || '#6498c9' }]}>
@@ -172,17 +186,22 @@ export default function MapaScreen() {
         </View>
       )}
 
-      {/* Map or fallback */}
+
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6498c9" />
           <Text style={styles.loadingText}>Carregando ocorrências...</Text>
         </View>
+      ) : !mapReady || !MapComponents ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6498c9" />
+          <Text style={styles.loadingText}>Carregando mapa...</Text>
+        </View>
       ) : Platform.OS === 'web' ? (
         <WebMapFallback denuncias={filtered} onSelect={handleSelect} />
       ) : (
         <>
-          <MapView
+          <MapComponents.MapView
             style={styles.map}
             initialRegion={{
               latitude: DEFAULT_COORDS.latitude,
@@ -195,25 +214,25 @@ export default function MapaScreen() {
               const coords = getCoords(d.bairroOcorrencia);
               const color = TIPO_COLORS[d.tipoDenuncia] || '#6498c9';
               return (
-                <Marker
+                <MapComponents.Marker
                   key={d.id}
                   coordinate={coords}
                   pinColor={color}
                   onPress={() => handleSelect(d)}
                 >
-                  <Callout>
+                  <MapComponents.Callout>
                     <View style={styles.callout}>
                       <Text style={styles.calloutTitle}>{d.tipoDenuncia}</Text>
                       <Text style={styles.calloutBairro}>{d.bairroOcorrencia}</Text>
                       <Text style={styles.calloutProto}>#{d.protocolo}</Text>
                     </View>
-                  </Callout>
-                </Marker>
+                  </MapComponents.Callout>
+                </MapComponents.Marker>
               );
             })}
-          </MapView>
+          </MapComponents.MapView>
 
-          {/* Legend (native only) */}
+
           <View style={styles.legend}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
               {Object.entries(TIPO_COLORS).map(([tipo, color]) => (
@@ -227,7 +246,8 @@ export default function MapaScreen() {
         </>
       )}
 
-      {/* Detail Modal */}
+
+
       <Modal visible={showDetail} transparent animationType="slide">
         <TouchableOpacity
           style={styles.sheetOverlay}
@@ -272,7 +292,7 @@ export default function MapaScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Filter Modal */}
+
       <Modal visible={showFiltros} transparent animationType="slide">
         <TouchableOpacity
           style={styles.sheetOverlay}

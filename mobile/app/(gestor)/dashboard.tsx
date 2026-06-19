@@ -124,20 +124,20 @@ export default function DashboardScreen() {
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchDenuncias} />}
         showsVerticalScrollIndicator={false}
       >
-        
+
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Dashboard</Text>
           <Text style={styles.headerSub}>Visão geral das ocorrências</Text>
         </View>
 
-        
+
         <View style={styles.statsGrid}>
           <StatCard title="Total" value={stats.total} icon="document-text-outline" color="#6498c9" />
           <StatCard title="Em Andamento" value={stats.emAndamento} icon="refresh-outline" color="#3B82F6" />
           <StatCard title="Resolvidos" value={stats.resolvidos} icon="checkmark-circle-outline" color="#10B981" />
         </View>
 
-        
+
         {stats.total > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Taxa de Resolução</Text>
@@ -155,13 +155,13 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Por Situação</Text>
           <DonutChart data={stats.situacaoData} />
         </View>
 
-        
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Por Tipo de Ocorrência</Text>
           <BarChart data={stats.tipoData} />
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 5 },
   progressLabel: { fontSize: 13, color: '#6b7280' },
 
-  
+
   donut: { gap: 16 },
   donutCircle: {
     width: 100, height: 100, borderRadius: 50,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   legendLabel: { flex: 1, fontSize: 13, color: '#374151', fontWeight: '600' },
   legendValue: { fontSize: 13, color: '#6b7280' },
 
-  
+
   barChart: { gap: 12 },
   barRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   barLabel: { width: 90, fontSize: 11, color: '#4b5563', fontWeight: '600' },

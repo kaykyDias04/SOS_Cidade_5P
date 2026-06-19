@@ -106,7 +106,7 @@ export default function GestoresScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      
+
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Gestores</Text>
@@ -121,7 +121,7 @@ export default function GestoresScreen() {
         </TouchableOpacity>
       </View>
 
-      
+
       <FlatList
         data={gestores}
         keyExtractor={(item) => String(item.id)}
@@ -141,7 +141,7 @@ export default function GestoresScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      
+
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f0f4f8' }}>
           <View style={styles.modalHeader}>
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 17, fontWeight: '700', color: '#6b7280' },
   emptyDesc: { fontSize: 13, color: '#9ca3af' },
 
-  
+
   modalHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f0f4f8',

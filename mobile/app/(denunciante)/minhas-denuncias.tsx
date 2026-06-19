@@ -90,13 +90,13 @@ export default function MinhasDenunciasScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Minhas Denúncias</Text>
         <Text style={styles.headerSub}>{minhas.length} no total</Text>
       </View>
 
-      
+
       <View style={styles.searchWrapper}>
         <Ionicons name="search-outline" size={18} color="#9ca3af" />
         <TextInput
@@ -114,7 +114,7 @@ export default function MinhasDenunciasScreen() {
         )}
       </View>
 
-      {/* Filter chips */}
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -137,7 +137,7 @@ export default function MinhasDenunciasScreen() {
         })}
       </ScrollView>
 
-      
+
       <FlatList
         data={filtered}
         keyExtractor={(item) => String(item.id)}

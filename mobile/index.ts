@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-import { StyleSheet as NativeWindStyleSheet } from 'nativewind';
 
 if (Platform.OS === 'web') {
   const RN = require('react-native');
@@ -20,12 +19,12 @@ if (Platform.OS === 'web') {
       try {
         RN.UIManager.default = RN.UIManager;
       } catch (e) {
-        // Se for somente leitura, tenta criar propriedades configuráveis ou ignore
+
       }
     }
   }
 
-  // Polyfill para expo-secure-store usar o localStorage na Web
+
   try {
     const SecureStore = require('expo-secure-store');
     SecureStore.getItemAsync = async (key) => {
@@ -48,7 +47,5 @@ if (Platform.OS === 'web') {
     console.error('Falha ao aplicar polyfill em expo-secure-store:', e);
   }
 }
-
-NativeWindStyleSheet.setFlag('darkMode', 'class');
 
 import 'expo-router/entry';

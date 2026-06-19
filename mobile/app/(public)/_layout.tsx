@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 export default function PublicLayout() {
   const { isAuthenticated, user } = useAuthStore();
 
-  
+
   if (isAuthenticated && user) {
     if (user.role === 'GESTOR') {
       return <Redirect href="/denuncias" />;
