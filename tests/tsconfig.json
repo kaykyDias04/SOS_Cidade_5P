@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "typeRoots": [
+      "../backend/node_modules/@types"
+    ],
+    "types": ["node", "jest"]
+  },
+  "include": [
+    "./**/*.ts",
+    "../backend/src/**/*.ts"
+  ]
+}

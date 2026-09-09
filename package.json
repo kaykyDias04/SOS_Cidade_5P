@@ -1,0 +1,10 @@
+{
+  "name": "sos-cidade",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "npm --prefix tests test",
+    "test:api": "npm --prefix tests test",
+    "test:verbose": "npm --prefix tests run test:verbose"
+  }
+}
