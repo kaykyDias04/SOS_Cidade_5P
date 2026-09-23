@@ -1,0 +1,22 @@
+{
+  "name": "sos-cidade-e2e-tests",
+  "version": "1.0.0",
+  "description": "Suíte de testes E2E automatizados para o SUT S.O.S Cidade (Projetos 5) usando Playwright",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "keywords": [
+    "e2e-testing",
+    "sut",
+    "sos-cidade",
+    "playwright"
+  ],
+  "author": "Gabriel (Squad S.O.S-Cidade / Projetos 5)",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}
