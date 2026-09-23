@@ -1,0 +1,49 @@
+name: Revisao e Validacao da Estrutura do Codigo
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  validar-estrutura:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+            package-lock.json
+
+      - name: Instalar dependencias do backend
+        run: npm ci --prefix backend
+
+      - name: Instalar dependencias do frontend
+        run: npm ci --prefix frontend
+
+      - name: Instalar dependencias dos testes
+        run: npm install --prefix tests
+
+      - name: Validar build do backend
+        run: npm run build --prefix backend
+
+      - name: Validar lint do frontend
+        run: npm run lint --prefix frontend
+
+      - name: Validar build do frontend
+        run: npm run build --prefix frontend
+
+      - name: Validar testes da API
+        run: npm test
