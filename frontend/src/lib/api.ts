@@ -20,24 +20,14 @@ export async function apiCall<T>(
   options?: RequestInit
 ): Promise<ApiResponse<T>> {
   try {
-    
-    const token = typeof document !== 'undefined'
-      ? document.cookie.split('; ').find(c => c.startsWith('authToken='))?.split('=')[1] || null
-      : null;
-
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options?.headers as Record<string, string>),
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
-      
       credentials: 'include',
     });
 

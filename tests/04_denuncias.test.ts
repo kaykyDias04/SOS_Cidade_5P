@@ -72,6 +72,9 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       expect(response.status).toBe(200);
       expect(response.body.identificacao).toBe(false);
       expect(response.body.nomeDenunciante).toBe('Anônimo');
+
+      const storedDenuncia = mockPrisma.denuncia.create.mock.calls[0][0].data;
+      expect(storedDenuncia.nomeDenunciante).not.toBe('Anônimo');
     });
 
     it('CT-DEN-03: Deve aceitar imagens em base64 e retornar o campo desserializado como array', async () => {

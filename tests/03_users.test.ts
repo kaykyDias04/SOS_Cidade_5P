@@ -61,7 +61,7 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
       const payload = {
         email: 'denunciante@sos.com',
         name: 'Usuário Duplicado',
-        password: '123',
+        password: 'senha_segura_123',
       };
 
       const response = await request(app)
@@ -72,6 +72,22 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
       expect(response.body).toEqual({
         success: false,
         error: 'Este email já está cadastrado.',
+      });
+    });
+
+    it.each([undefined, '12345'])('Deve rejeitar senha ausente ou com menos de 6 caracteres', async (password) => {
+      const response = await request(app)
+        .post('/users')
+        .send({
+          email: 'senha.invalida@sos.com',
+          name: 'Senha Inválida',
+          password,
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        success: false,
+        error: 'A senha deve ter no mínimo 6 caracteres.',
       });
     });
   });

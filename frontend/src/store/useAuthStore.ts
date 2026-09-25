@@ -45,7 +45,6 @@ export const useAuthStore = create<AuthState>()(
               id: Number(response.data.user.id || (response.data.user as any).sub),
             };
 
-            Cookies.set('authToken', response.data.token, { expires: 7 });
             Cookies.set('userRole', mappedRole, { expires: 7 });
             set({ user: userData, isAuthenticated: true, isLoading: false });
 
@@ -67,7 +66,6 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Logout API error:', error);
         }
-        Cookies.remove('authToken');
         Cookies.remove('userRole');
         set({ user: null, isAuthenticated: false });
       },

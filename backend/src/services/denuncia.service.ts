@@ -1,5 +1,6 @@
 import { DenunciaRepository } from '../repositories/denuncia.repository';
 import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis';
+import { decrypt, encrypt } from '../lib/crypto';
 
 export class DenunciaService {
   private denunciaRepository = new DenunciaRepository();
@@ -7,10 +8,24 @@ export class DenunciaService {
   // Deserializa o campo imagens de string JSON para array
   private parseImagens(d: any) {
     if (!d) return d;
+
+    let nomeDenunciante = d.nomeDenunciante;
+    if (typeof nomeDenunciante === 'string') {
+      try {
+        nomeDenunciante = decrypt(nomeDenunciante);
+      } catch {
+        nomeDenunciante = d.nomeDenunciante;
+      }
+    }
+
     try {
-      return { ...d, imagens: d.imagens ? JSON.parse(d.imagens) : null };
+      return {
+        ...d,
+        nomeDenunciante,
+        imagens: d.imagens ? JSON.parse(d.imagens) : null,
+      };
     } catch {
-      return { ...d, imagens: null };
+      return { ...d, nomeDenunciante, imagens: null };
     }
   }
 
@@ -23,7 +38,7 @@ export class DenunciaService {
       try {
         return JSON.parse(cached);
       } catch (err) {
-        console.error('[DenunciaService] Error parsing cache JSON:', err);
+        console.error('[DenunciaService] Error parsing cache JSON:', (err as { message?: string } | null | undefined)?.message || 'Unknown error');
       }
     }
 
@@ -42,7 +57,7 @@ export class DenunciaService {
       await redisSet(cacheKey, JSON.stringify(result), 60);
       return result;
     } catch (error) {
-      console.error('[DenunciaService] Error fetching denuncias:', error);
+      console.error('[DenunciaService] Error fetching denuncias:', (error as { message?: string } | null | undefined)?.message || 'Unknown error');
       throw error;
     }
   }
@@ -58,7 +73,7 @@ export class DenunciaService {
     const denuncia = await this.denunciaRepository.create({
       tipoDenuncia: data.tipoDenuncia,
       identificacao: data.identificacao,
-      nomeDenunciante: data.nomeDenunciante || (data.identificacao ? data.userEmail : 'Anônimo'),
+      nomeDenunciante: encrypt(data.nomeDenunciante || (data.identificacao ? data.userEmail : 'Anônimo')),
       user: data.userId ? { connect: { id: data.userId } } : undefined,
       bairroOcorrencia: data.bairroOcorrencia,
       descricaoOcorrencia: data.descricaoOcorrencia,
