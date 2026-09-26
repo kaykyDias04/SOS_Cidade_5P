@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "SOS-Cidade",
+    "slug": "sos-cidade-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.soscidade.mobile"
+    },
+    "android": {
+      "package": "com.soscidade.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    }
+  }
+}
