@@ -14,7 +14,7 @@ export class UserService {
       email: data.email,
       name: data.name,
       password: hashedPassword,
-      role: data.role || 'DENUNCIANTE'
+      role: 'DENUNCIANTE'
     });
   }
 
