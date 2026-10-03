@@ -9,6 +9,9 @@
     "start": "npx prisma migrate deploy && node dist/server.js",
     "dev": "prisma generate && nodemon src/server.ts"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.0.0",
     "@types/bcrypt": "^5.0.2",

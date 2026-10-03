@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { JWT_SECRET } from '../config/env';
 import jwt from 'jsonwebtoken';
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
@@ -9,7 +10,6 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
   
   try {
-    const JWT_SECRET = process.env.JWT_SECRET || 'supersecret123';
     const decoded = jwt.verify(token, JWT_SECRET);
     (req as any).user = decoded;
     next();

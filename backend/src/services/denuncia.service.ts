@@ -1,5 +1,6 @@
 import { DenunciaRepository } from '../repositories/denuncia.repository';
 import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis';
+import { encrypt, decrypt } from '../lib/crypto';
 
 export class DenunciaService {
   private denunciaRepository = new DenunciaRepository();
@@ -7,15 +8,26 @@ export class DenunciaService {
   // Deserializa o campo imagens de string JSON para array
   private parseImagens(d: any) {
     if (!d) return d;
+    let parsed;
     try {
-      return { ...d, imagens: d.imagens ? JSON.parse(d.imagens) : null };
+      parsed = { ...d, imagens: d.imagens ? JSON.parse(d.imagens) : null };
     } catch {
-      return { ...d, imagens: null };
+      parsed = { ...d, imagens: null };
     }
+
+    if (typeof parsed.nomeDenunciante === 'string') {
+      try {
+        parsed.nomeDenunciante = decrypt(parsed.nomeDenunciante);
+      } catch {
+        parsed.nomeDenunciante = d.nomeDenunciante;
+      }
+    }
+
+    return parsed;
   }
 
-  async getDenuncias(page: number, limit: number) {
-    const cacheKey = `denuncias:${page}:${limit}`;
+  async getDenuncias(page: number, limit: number, userId?: number) {
+    const cacheKey = `denuncias:${userId ?? 'all'}:${page}:${limit}`;
     
     
     const cached = await redisGet(cacheKey);
@@ -30,12 +42,12 @@ export class DenunciaService {
     try {
       const skip = (page - 1) * limit;
       const [denuncias, total] = await Promise.all([
-        this.denunciaRepository.findAll(skip, limit),
-        this.denunciaRepository.count()
+        this.denunciaRepository.findAll(skip, limit, userId),
+        this.denunciaRepository.count(userId)
       ]);
 
       const result = {
-        data: (denuncias || []).map((d) => this.parseImagens(d)),
+        data: (denuncias || []).map((d: any) => this.parseImagens(d)),
         meta: { total: total || 0, page, limit }
       };
       
@@ -58,7 +70,7 @@ export class DenunciaService {
     const denuncia = await this.denunciaRepository.create({
       tipoDenuncia: data.tipoDenuncia,
       identificacao: data.identificacao,
-      nomeDenunciante: data.nomeDenunciante || (data.identificacao ? data.userEmail : 'Anônimo'),
+      nomeDenunciante: encrypt(data.identificacao ? (data.nomeDenunciante || data.userEmail) : 'Anônimo'),
       user: data.userId ? { connect: { id: data.userId } } : undefined,
       bairroOcorrencia: data.bairroOcorrencia,
       descricaoOcorrencia: data.descricaoOcorrencia,
