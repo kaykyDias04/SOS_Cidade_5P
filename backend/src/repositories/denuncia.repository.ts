@@ -2,12 +2,19 @@ import { prisma } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 
 export class DenunciaRepository {
-  async findAll(skip: number, take: number) {
-    return prisma.denuncia.findMany({ skip, take, orderBy: { createdAt: 'desc' } });
+  async findAll(skip: number, take: number, userId?: number) {
+    return prisma.denuncia.findMany({
+      where: userId === undefined ? undefined : { userId },
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' }
+    });
   }
 
-  async count() {
-    return prisma.denuncia.count();
+  async count(userId?: number) {
+    return prisma.denuncia.count({
+      where: userId === undefined ? undefined : { userId }
+    });
   }
 
   async findById(id: number) {
