@@ -23,6 +23,14 @@ export class DenunciaService {
       }
     }
 
+    if (typeof parsed.descricaoOcorrencia === 'string') {
+      try {
+        parsed.descricaoOcorrencia = decrypt(parsed.descricaoOcorrencia);
+      } catch {
+        parsed.descricaoOcorrencia = d.descricaoOcorrencia;
+      }
+    }
+
     return parsed;
   }
 
@@ -73,7 +81,7 @@ export class DenunciaService {
       nomeDenunciante: encrypt(data.identificacao ? (data.nomeDenunciante || data.userEmail) : 'Anônimo'),
       user: data.userId ? { connect: { id: data.userId } } : undefined,
       bairroOcorrencia: data.bairroOcorrencia,
-      descricaoOcorrencia: data.descricaoOcorrencia,
+      descricaoOcorrencia: encrypt(data.descricaoOcorrencia),
       dataOcorrencia: data.dataOcorrencia,
       protocolo,
       situacao: data.situacao || 'Em Andamento',
