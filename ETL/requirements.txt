@@ -1,6 +1,0 @@
-requests
-pandas
-pymongo[srv]
-python-dotenv
-sqlalchemy
-psycopg[binary]
