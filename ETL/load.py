@@ -21,6 +21,13 @@ class Load:
         self.client.close()
 
     def load_mongo(self, data: dict, db_name: str, collection_name: str) -> None:
+        """Insere o resultado bruto da API em uma coleção do MongoDB.
+
+        Args:
+            data: documento bruto (dicionário) a ser inserido.
+            db_name: nome do banco de dados.
+            collection_name: nome da coleção de destino.
+        """
         collection = self.client[db_name][collection_name]
         collection.insert_one(data)
 
@@ -32,7 +39,16 @@ class Load:
         nome_banco: str = "clima.db",
         nome_tabela: str = "clima_historico",
     ) -> None:
-        conn = sqlite3.connect(nome_banco)
+        """Salva o DataFrame transformado em uma tabela SQLite.
+
+        A tabela é recriada a cada execução (if_exists="replace").
+
+        Args:
+            df: DataFrame já transformado.
+            nome_banco: caminho do arquivo SQLite.
+            nome_tabela: nome da tabela de destino.
+        """
+        conn =sqlite3.connect(nome_banco)
         df.to_sql(nome_tabela, conn, if_exists="replace", index=False)
         conn.close()
 
