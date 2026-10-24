@@ -1,13 +1,11 @@
-import os
-from pathlib import Path
-
 import requests
-from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
-load_dotenv()
+try:
+    from ETL import config
+except ModuleNotFoundError:
+    import config
 
 
 class Extract:
@@ -27,7 +25,7 @@ class Extract:
         self.base_url = "https://archive-api.open-meteo.com/v1/archive"
         self.timezone = "America/Recife"
         self.timeout = 30
-        self.mongo_uri = os.getenv("MONGODB_URI")
+        self.mongo_uri = config.MONGODB_URI
         self.client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
 
     def close(self) -> None:

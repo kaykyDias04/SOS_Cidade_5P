@@ -1,21 +1,20 @@
-import os
-from pathlib import Path
 import sqlite3
 
 import pandas as pd
-from dotenv import load_dotenv
 from pymongo import MongoClient
 from sqlalchemy import create_engine
 from pymongo.server_api import ServerApi
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
-load_dotenv()
+try:
+    from ETL import config
+except ModuleNotFoundError:
+    import config
 
 
 class Load:
     def __init__(self) -> None:
-        self.mongo_uri = os.getenv("MONGODB_URI")
-        self.neon_url = os.getenv("NEON_DATABASE_URL")
+        self.mongo_uri = config.MONGODB_URI
+        self.neon_url = config.NEON_DATABASE_URL
         self.client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
 
     def close(self) -> None:
