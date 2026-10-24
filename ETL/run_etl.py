@@ -24,7 +24,7 @@ MONGO_COLECAO = "ClimaBrasil"
 
 
 def main() -> None:
-    """Executa o pipeline: API Open-Meteo -> MongoDB -> pandas -> SQLite."""
+    """Executa o pipeline: API Open-Meteo -> MongoDB Atlas -> pandas -> NeonDB."""
     ext = Extract()
     ld = Load()
     transformer = Transform()
@@ -40,8 +40,8 @@ def main() -> None:
     documentos = ext.extract_collection_from_mongo(MONGO_DB, MONGO_COLECAO)
     df = transformer.transform_clima(documentos[-1])
 
-    print("\nEtapa 3: Salvando no SQLite!")
-    ld.load_sqlite(df=df)
+    print("\nEtapa 3: Salvando no NeonDB!")
+    ld.load_neon(df=df)
 
     ext.close()
     ld.close()

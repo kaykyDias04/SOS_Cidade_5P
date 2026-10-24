@@ -5,6 +5,7 @@ import sqlite3
 import pandas as pd
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from sqlalchemy import create_engine
 from pymongo.server_api import ServerApi
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -14,6 +15,7 @@ load_dotenv()
 class Load:
     def __init__(self) -> None:
         self.mongo_uri = os.getenv("MONGODB_URI")
+        self.neon_url = os.getenv("NEON_DATABASE_URL")
         self.client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
 
     def close(self) -> None:
@@ -32,6 +34,34 @@ class Load:
         collection.insert_one(data)
 
         print(f"Dados inseridos com sucesso na coleção '{collection_name}'!")
+
+    def load_neon(
+        self,
+        df: pd.DataFrame,
+        nome_tabela: str = "clima_historico",
+    ) -> None:
+        """Salva o DataFrame transformado em uma tabela do NeonDB (PostgreSQL).
+
+        A conexão usa a variável NEON_DATABASE_URL do .env. A tabela é
+        recriada a cada execução (if_exists="replace").
+
+        Args:
+            df: DataFrame já transformado.
+            nome_tabela: nome da tabela de destino no NeonDB.
+
+        Raises:
+            ValueError: se NEON_DATABASE_URL não estiver definida.
+        """
+        if not self.neon_url:
+            raise ValueError("Variável NEON_DATABASE_URL não definida no .env.")
+
+        engine = create_engine(self.neon_url)
+        try:
+            df.to_sql(nome_tabela, engine, if_exists="replace", index=False)
+        finally:
+            engine.dispose()
+
+        print(f"Dados salvos com sucesso na tabela '{nome_tabela}' do NeonDB!")
 
     def load_sqlite(
         self,
