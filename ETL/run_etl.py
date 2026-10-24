@@ -17,20 +17,27 @@ except ModuleNotFoundError:
     from transform import Transform
 
 
+DATA_INICIO = "2024-01-01"
+DATA_FIM = "2024-01-31"
+MONGO_DB = "OpenMeteo"
+MONGO_COLECAO = "ClimaBrasil"
+
+
 def main() -> None:
+    """Executa o pipeline: API Open-Meteo -> MongoDB -> pandas -> SQLite."""
     ext = Extract()
     ld = Load()
     transformer = Transform()
 
     print("Etapa 1: Extração da API Open-Meteo!")
     data = ext.clima_historico(
-        data_inicio="2024-01-01",
-        data_fim="2024-01-31",
+        data_inicio=DATA_INICIO,
+        data_fim=DATA_FIM,
     )
-    ld.load_mongo(data, "OpenMeteo", "ClimaBrasil")
+    ld.load_mongo(data, MONGO_DB, MONGO_COLECAO)
 
     print("\nEtapa 2: Releitura do MongoDB e transformação!")
-    documentos = ext.extract_collection_from_mongo("OpenMeteo", "ClimaBrasil")
+    documentos = ext.extract_collection_from_mongo(MONGO_DB, MONGO_COLECAO)
     df = transformer.transform_clima(documentos[-1])
 
     print("\nEtapa 3: Salvando no SQLite!")

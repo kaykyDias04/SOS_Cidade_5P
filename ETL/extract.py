@@ -25,6 +25,8 @@ class Extract:
 
     def __init__(self) -> None:
         self.base_url = "https://archive-api.open-meteo.com/v1/archive"
+        self.timezone = "America/Recife"
+        self.timeout = 30
         self.mongo_uri = os.getenv("MONGODB_URI")
         self.client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
 
@@ -38,7 +40,22 @@ class Extract:
         data_fim: str,
         variaveis: list[str] | None = None,
     ) -> dict:
+        """Busca na Open-Meteo o clima diário histórico de Recife.
 
+        Args:
+            data_inicio: data inicial do período, no formato "YYYY-MM-DD".
+            data_fim: data final do período, no formato "YYYY-MM-DD".
+            variaveis: chaves de VARIAVEIS_DIARIAS a consultar. Se None,
+                todas são consultadas.
+
+        Returns:
+            O JSON bruto da API, acrescido das chaves "_cidade",
+            "_data_inicio" e "_data_fim".
+
+        Raises:
+            ValueError: se alguma variável não existir em VARIAVEIS_DIARIAS.
+            requests.HTTPError: se a API responder com erro.
+        """
         if variaveis is None:
             variaveis = list(self.VARIAVEIS_DIARIAS.keys())
 
@@ -55,10 +72,10 @@ class Extract:
             "start_date": data_inicio,
             "end_date": data_fim,
             "daily": ",".join(variaveis),
-            "timezone": "America/Recife",
+            "timezone": self.timezone,
         }
 
-        response = requests.get(self.base_url, params=params, timeout=30)
+        response = requests.get(self.base_url, params=params, timeout=self.timeout)
         response.raise_for_status()
 
         payload = response.json()
@@ -68,11 +85,20 @@ class Extract:
 
         print(
             f"Dados extraídos com sucesso da Open-Meteo "
-            f"(Recife, {data_inicio} -> {data_fim})!"
+            f"({self.CIDADE}, {data_inicio} -> {data_fim})!"
         )
         return payload
 
     def extract_collection_from_mongo(self, db_name: str, collection_name: str) -> list[dict]:
+        """Lê todos os documentos de uma coleção do MongoDB.
+
+        Args:
+            db_name: nome do banco de dados.
+            collection_name: nome da coleção a ser lida.
+
+        Returns:
+            Lista de documentos (dicionários) da coleção.
+        """
         collection = self.client[db_name][collection_name]
         documentos = list(collection.find())
 
