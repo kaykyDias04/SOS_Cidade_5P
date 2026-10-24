@@ -1,0 +1,166 @@
+name: Regressao Completa
+
+on:
+  workflow_dispatch:
+
+jobs:
+  regressao-completa:
+    name: Regressao Completa
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: soscidade
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias do backend
+        working-directory: ./backend
+        run: npm install
+
+      - name: Instalar dependencias dos testes de API
+        working-directory: ./tests
+        run: npm install
+
+      - name: Instalar dependencias do frontend
+        working-directory: ./frontend
+        run: npm install
+
+      # ============================================================
+      # STEP 1 — TESTES UNITARIOS
+      # ============================================================
+      - name: Testes Unitarios
+        working-directory: .
+        run: |
+          echo "============================================"
+          echo "STEP 1: TESTES UNITARIOS"
+          echo "============================================"
+          echo ""
+          echo "Nao existem testes unitarios neste projeto."
+          echo "O plano de testes (plano-de-testes-equipe8.md) previa"
+          echo "testes de componente para regras puras, mas a suite"
+          echo "implementada cobre esses cenarios via testes de API"
+          echo "com mocks em memoria (tests/helpers/mockDb.ts)."
+          echo ""
+          echo "Este step permanece no workflow para manter a"
+          echo "organizacao por nivel conforme requisito da atividade."
+          echo "============================================"
+
+      # ============================================================
+      # STEP 2 — TESTES DE API
+      # ============================================================
+      - name: Testes de API
+        working-directory: ./tests
+        env:
+          NODE_ENV: test
+        run: |
+          echo "============================================"
+          echo "STEP 2: TESTES DE API"
+          echo "============================================"
+          npm test 2>&1 | tee api-test-output.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo ""
+          echo "============================================"
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "TESTES DE API: PASSOU"
+          else
+            echo "TESTES DE API: FALHOU (exit code: $EXIT_CODE)"
+          fi
+          echo "============================================"
+          exit $EXIT_CODE
+
+      # ============================================================
+      # STEP 3 — TESTES E2E (fluxos principais)
+      # ============================================================
+      - name: Testes E2E (fluxos principais)
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/soscidade?schema=public
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: supersecret123
+          PORT: 8000
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: |
+          echo "============================================"
+          echo "STEP 3: TESTES E2E (fluxos principais)"
+          echo "============================================"
+
+          # Build do backend
+          echo "Compilando backend..."
+          cd backend
+          npm run build
+
+          # Subir backend em background
+          echo "Subindo backend..."
+          npx prisma migrate deploy
+          node dist/server.js &
+          BACKEND_PID=$!
+          cd ..
+
+          # Subir frontend em background
+          echo "Subindo frontend..."
+          cd frontend
+          npm run build
+          npm start &
+          FRONTEND_PID=$!
+          cd ..
+
+          # Instalar wait-on globalmente
+          npm install -g wait-on
+
+          # Wait for services
+          echo "Aguardando servicos ficarem disponiveis..."
+          npx wait-on http://localhost:8000/health --timeout 120000
+          npx wait-on http://localhost:3000 --timeout 120000
+
+          # Install Playwright
+          cd e2e
+          npm install
+          npx playwright install --with-deps chromium
+
+          # Run E2E tests
+          echo "Executando testes E2E..."
+          npx playwright test 2>&1 | tee e2e-test-output.log
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          # Cleanup
+          kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
+
+          echo ""
+          echo "============================================"
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "TESTES E2E: PASSOU"
+          else
+            echo "TESTES E2E: FALHOU (exit code: $EXIT_CODE)"
+          fi
+          echo "============================================"
+          exit $EXIT_CODE
