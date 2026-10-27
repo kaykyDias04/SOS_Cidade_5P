@@ -1,0 +1,41 @@
+name: unit-api
+
+# Testes rápidos (unitários e de API), sem banco, Redis nem servidor: prisma e redis
+# são mockados. Rodam a cada push e em todo PR para a main. Check obrigatório do
+# quality gate, junto com o e2e-smoke.
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Um push novo na mesma branch cancela a execução anterior ainda em andamento.
+concurrency:
+  group: unit-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-api:
+    name: unit-api # o nome é o que aparece na regra de proteção da main; não mudar
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependências do backend
+        run: npm ci --prefix backend
+
+      - name: Testes unitários
+        run: npm run test:unit
+
+      - name: Testes de API
+        if: ${{ !cancelled() }}
+        run: npm run test:api

@@ -1,0 +1,47 @@
+name: Subir stack de testes
+description: >-
+  Instala as dependências, prepara o banco (migrations e seed) e sobe backend e
+  frontend em segundo plano, prontos para os testes E2E. O job que usa esta action
+  precisa declarar os services postgres e redis e as variáveis DATABASE_URL,
+  DIRECT_URL, REDIS_URL e NEXT_PUBLIC_API_URL.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 24
+        cache: npm
+        cache-dependency-path: |
+          backend/package-lock.json
+          frontend/package-lock.json
+          e2e/package-lock.json
+
+    - name: Gerar chaves de teste
+      shell: bash
+      run: |
+        echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        echo "DATA_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+    - name: Instalar dependências
+      shell: bash
+      run: |
+        npm ci --prefix backend
+        npm ci --prefix frontend
+        npm ci --prefix e2e
+        cd e2e && npx playwright install --with-deps chromium
+
+    - name: Preparar banco (migrations e seed)
+      shell: bash
+      working-directory: backend
+      run: npx prisma migrate deploy && npx prisma db seed
+
+    - name: Subir backend e frontend
+      shell: bash
+      run: |
+        npm run build --prefix backend
+        (cd backend && nohup node dist/server.js > backend.log 2>&1 &)
+        npm run build --prefix frontend
+        (cd frontend && nohup npm start > frontend.log 2>&1 &)
+        timeout 60 bash -c 'until curl -sf http://localhost:8000/health; do sleep 1; done'
+        timeout 60 bash -c 'until curl -sf -o /dev/null http://localhost:3000/login; do sleep 1; done'
