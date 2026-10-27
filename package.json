@@ -7,6 +7,7 @@
     "test:unit": "node --test \"frontend/tests/*.test.mjs\" && npm --prefix backend run test:unit",
     "test:api": "npm --prefix tests test",
     "test:e2e": "npm --prefix e2e test",
+    "test:e2e:smoke": "npm --prefix e2e test -- --grep @smoke",
     "test:verbose": "npm --prefix tests run test:verbose"
   }
 }

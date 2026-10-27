@@ -11,7 +11,7 @@ import { API_URL, gestorSeed } from './fixtures/testData';
  */
 
 test.describe('Jornada do Gestor: login e acesso ao painel', () => {
-  test('deve logar como gestor e acessar o Dashboard Interativo', async ({ page }) => {
+  test('deve logar como gestor e acessar o Dashboard Interativo @smoke', async ({ page }) => {
     await page.goto('/login');
 
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
@@ -23,7 +23,7 @@ test.describe('Jornada do Gestor: login e acesso ao painel', () => {
     await expect(page.getByRole('heading', { name: 'Dashboard Interativo' })).toBeVisible();
   });
 
-  test('denunciante comum não deve conseguir acessar rota do gestor', async ({ page, request }) => {
+  test('denunciante comum não deve conseguir acessar rota do gestor @smoke', async ({ page, request }) => {
     // usa o próprio cadastro público (sempre cria DENUNCIANTE)
     const denuncianteEmail = `denunciante.e2e.${Date.now()}@sos.com`;
     const cadastro = await request.post(`${API_URL}/users`, {
