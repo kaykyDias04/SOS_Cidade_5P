@@ -2,25 +2,8 @@
 
 Equipe 8
 
-**Alunos**:Drielly Santiago dos Santos
+**Alunos**:
 
-Marcos Antonio Taveira Fraga
-
-Pedro Henrique Renil da Silva Souza
-
-Alan Vitor Ferreira Sobral
-
-Joao Pedro do Monte Souza
-
-Pedro Soares Rangel
-
-Glauco Santos Seixas Cerqueira
-
-Gabriel Cavalcante Barros de Oliveira
-
-Kayky Dias de Oliveira
-
-Dilvanir Aline Alves Cabral de Melo
 
      
 
