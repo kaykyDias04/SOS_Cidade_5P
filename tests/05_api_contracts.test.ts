@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { mockPrisma, mockRedisMethods, resetMockDb } from './helpers/mockDb';
-import { generateDenuncianteToken, getBearerHeader } from './helpers/authHelper';
+import { generateDenuncianteToken, generateGestorToken, getBearerHeader } from './helpers/authHelper';
 import swaggerDocument from '../backend/src/swagger.json';
 
 jest.mock('../backend/src/lib/prisma', () => ({
@@ -73,7 +73,7 @@ describe('SUT API Tests - Módulo 05: Contratos de Dados e Conformidade Swagger/
     it('CT-CON-03: Contrato do envelope de paginação GET /denuncias deve conter as propriedades data e meta', async () => {
       const response = await request(app)
         .get('/denuncias')
-        .set('Authorization', getBearerHeader(token));
+        .set('Authorization', getBearerHeader(generateGestorToken()));
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');

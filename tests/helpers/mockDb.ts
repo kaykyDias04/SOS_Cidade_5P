@@ -193,12 +193,17 @@ export const mockPrisma = {
       return sorted.slice(skip, skip + take);
     }),
 
-    findMany: jest.fn(async ({ skip = 0, take = 50 }: { skip?: number; take?: number } = {}) => {
-      const sorted = [...denuncias].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      return sorted.slice(skip, skip + take);
-    }),
+    findMany: jest.fn(
+      async ({ where, skip = 0, take = 50 }: { where?: { userId?: number }; skip?: number; take?: number } = {}) => {
+        const filtradas = where?.userId === undefined ? denuncias : denuncias.filter((d) => d.userId === where.userId);
+        const sorted = [...filtradas].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        return sorted.slice(skip, skip + take);
+      },
+    ),
 
-    count: jest.fn(async () => denuncias.length),
+    count: jest.fn(async ({ where }: { where?: { userId?: number } } = {}) =>
+      where?.userId === undefined ? denuncias.length : denuncias.filter((d) => d.userId === where.userId).length,
+    ),
 
     findById: jest.fn(async (id: number) => {
       return denuncias.find((d) => d.id === id) || null;

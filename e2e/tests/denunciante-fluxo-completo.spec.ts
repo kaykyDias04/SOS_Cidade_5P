@@ -14,7 +14,9 @@ import { generateTestUser, denunciaValida } from './fixtures/testData';
  * e http://localhost:8000 (backend), conforme README deste projeto.
  */
 
-test.describe('Jornada do Cidadão: cadastro, login e registro de denúncia', () => {
+// Serial: os 4 casos usam a mesma conta, criada no primeiro. Se um falha,
+// os seguintes não rodam (aparecem como não executados), em vez de falhar em cascata.
+test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúncia', () => {
   const usuario = generateTestUser();
 
   test('deve permitir cadastrar uma nova conta de cidadão', async ({ page }) => {
@@ -43,7 +45,9 @@ test.describe('Jornada do Cidadão: cadastro, login e registro de denúncia', ()
     await loginForm.getByRole('button', { name: 'Entrar' }).click();
 
     await expect(page).toHaveURL(/\/homepage-denunciante/);
-    await expect(page.getByText('Login realizado com sucesso')).toBeVisible();
+    // O aviso "Login realizado com sucesso" some no redirecionamento: o <Toaster>
+    // só existe em /login. O oráculo é a saudação da home do denunciante.
+    await expect(page.getByRole('heading', { name: /^Olá,/ })).toBeVisible();
   });
 
   test('não deve logar com senha incorreta (caminho negativo)', async ({ page }) => {
@@ -70,7 +74,11 @@ test.describe('Jornada do Cidadão: cadastro, login e registro de denúncia', ()
 
     // ir para o formulário de nova denúncia
     await page.goto('/nova-denuncia');
-    await expect(page.getByRole('heading', { name: 'Nova Denúncia' })).toBeVisible();
+    // O cabeçalho do site repete o título num h1. O layout tem dois <main> aninhados;
+    // o de dentro (o último) só tem o conteúdo da página.
+    await expect(
+      page.getByRole('main').last().getByRole('heading', { name: 'Nova Denúncia', exact: true }),
+    ).toBeVisible();
 
     // Tipo do Problema (select estilo shadcn/Radix)
     await page.getByRole('combobox', { name: /Tipo do Problema/i }).click();
@@ -96,13 +104,17 @@ test.describe('Jornada do Cidadão: cadastro, login e registro de denúncia', ()
     await page.getByRole('button', { name: 'Confirmar' }).click();
 
     // Modal de protocolo gerado
-    await expect(page.getByText(/SOS-\d{4}-[A-Z0-9]{8}/)).toBeVisible();
+    const protocoloNoModal = page.getByText(/SOS-\d{4}-[A-Z0-9]{8}/).first();
+    await expect(protocoloNoModal).toBeVisible();
     await expect(page.getByText('Denúncia registrada com sucesso')).toBeVisible();
+    const protocolo = (await protocoloNoModal.textContent())?.match(/SOS-\d{4}-[A-Z0-9]{8}/)?.[0];
+    expect(protocolo).toBeTruthy();
 
     // fecha o modal de protocolo (volta pra home) e confere na listagem
     await page.getByRole('dialog').getByRole('button').last().click().catch(() => {});
 
+    // Oráculo: o protocolo recém-gerado aparece no histórico do próprio cidadão
     await page.goto('/minhas-denuncias');
-    await expect(page.getByText(denunciaValida.bairro).first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(protocolo!).first()).toBeVisible({ timeout: 10_000 });
   });
 });

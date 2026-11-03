@@ -7,7 +7,11 @@
     "build": "prisma generate && tsc",
     "postinstall": "prisma generate",
     "start": "npx prisma migrate deploy && node dist/server.js",
-    "dev": "prisma generate && nodemon src/server.ts"
+    "dev": "prisma generate && nodemon src/server.ts",
+    "test:unit": "jest --config jest.config.js"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",

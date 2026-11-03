@@ -1,0 +1,53 @@
+name: e2e-smoke
+
+# De 1 a 3 testes E2E marcados com @smoke no título, rodando contra a stack completa.
+# Roda em todo PR para a main. Check obrigatório do quality gate, junto com o unit-api.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-smoke:
+    name: e2e-smoke # o nome é o que aparece na regra de proteção da main; não mudar
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: soscidade
+          POSTGRES_HOST_AUTH_METHOD: trust # banco descartável do job, sem senha
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-retries 12
+
+    env:
+      DATABASE_URL: postgresql://postgres@localhost:5432/soscidade
+      DIRECT_URL: postgresql://postgres@localhost:5432/soscidade
+      REDIS_URL: redis://localhost:6379
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/subir-stack
+
+      - name: Testes E2E smoke
+        run: npm run test:e2e:smoke
+
+      - name: Relatório E2E (só em falha)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-e2e-smoke
+          path: e2e/playwright-report/

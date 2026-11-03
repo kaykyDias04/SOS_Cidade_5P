@@ -2,6 +2,7 @@ import request from 'supertest';
 import { mockPrisma, mockRedisMethods, resetMockDb } from './helpers/mockDb';
 import {
   generateDenuncianteToken,
+  generateGestorToken,
   generateInvalidToken,
   getAuthCookie,
   getBearerHeader,
@@ -159,7 +160,7 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
     });
 
     it('CT-AUT-10: Deve permitir acesso utilizando token trafegado via Cookie HttpOnly (authToken)', async () => {
-      const validToken = generateDenuncianteToken();
+      const validToken = generateGestorToken();
 
       const response = await request(app)
         .get('/denuncias')
@@ -170,7 +171,7 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
     });
 
     it('CT-AUT-11: Deve permitir acesso utilizando token trafegado via cabeçalho Authorization Bearer', async () => {
-      const validToken = generateDenuncianteToken();
+      const validToken = generateGestorToken();
 
       const response = await request(app)
         .get('/denuncias')
@@ -178,6 +179,18 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
+    });
+
+    it('CT-AUT-12: Deve barrar com 403 o DENUNCIANTE autenticado na listagem geral, exclusiva do GESTOR', async () => {
+      const response = await request(app)
+        .get('/denuncias')
+        .set('Authorization', getBearerHeader(generateDenuncianteToken()));
+
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({
+        success: false,
+        error: 'Forbidden',
+      });
     });
   });
 });

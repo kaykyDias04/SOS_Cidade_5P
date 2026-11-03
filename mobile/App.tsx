@@ -1,14 +1,20 @@
-import React from 'react';
-import { AppNavigator } from './src/navigation/AppNavigator';
-import { User } from './src/models/User';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function App() {
-  function handleLoginSuccess(user: User) {
-    // Ponto de partida simples. Conforme o app crescer, isso deve virar
-    // um estado global de sessão (Context ou uma lib de estado),
-    // mas para o escopo inicial isso já mostra o fluxo funcionando.
-    console.log('Usuário logado:', user);
-  }
-
-  return <AppNavigator onLoginSuccess={handleLoginSuccess} />;
+  return (
+    <View style={styles.container}>
+      <Text>Open up App.tsx to start working on your app!</Text>
+      <StatusBar style="auto" />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

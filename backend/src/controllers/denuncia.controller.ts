@@ -15,6 +15,18 @@ export class DenunciaController {
     }
   }
 
+  async getMinhasDenuncias(req: Request, res: Response) {
+    try {
+      const page = parseInt(req.query._page as string) || 1;
+      const limit = parseInt(req.query._limit as string) || 50;
+      const userId = (req as any).user.id;
+      const result = await this.denunciaService.getDenuncias(page, limit, userId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
   async getById(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id as string);
@@ -40,7 +52,8 @@ export class DenunciaController {
   async update(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id as string);
-      const denuncia = await this.denunciaService.updateDenuncia(id, req.body);
+      const { situacao } = req.body;
+      const denuncia = await this.denunciaService.updateDenuncia(id, { situacao });
       res.json(denuncia);
     } catch (error) {
       res.status(500).json({ success: false, error: 'Internal server error' });

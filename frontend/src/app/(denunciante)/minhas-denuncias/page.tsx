@@ -24,7 +24,7 @@ export default function MinhasDenunciasPage() {
       const MAX_PAGES = 10;
 
       while (hasMore && page <= MAX_PAGES) {
-        const res = await denunciasAPI.list(page, 100);
+        const res = await denunciasAPI.listMinhas(page, 100);
         if (res.success && res.data) {
           const paginatedData = res.data as any;
           const items = Array.isArray(paginatedData) ? paginatedData : (paginatedData.data || []);

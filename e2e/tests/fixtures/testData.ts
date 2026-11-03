@@ -11,6 +11,15 @@ export function generateTestUser() {
   };
 }
 
+export const API_URL = process.env.API_URL ?? 'http://localhost:8000';
+
+// GESTOR criado pelo seed do backend (backend/prisma/seed.ts), que roda antes da suíte.
+// O cadastro público só cria DENUNCIANTE, por design.
+export const gestorSeed = {
+  email: 'gestor1.teste@soscidade.com',
+  password: 'Teste@123',
+};
+
 export const denunciaValida = {
   tipoCategoria: 'Buraco na Via', // label exibido no Select
   bairro: 'Boa Viagem', // label exibido no Select

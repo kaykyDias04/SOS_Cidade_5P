@@ -107,6 +107,12 @@ export const denunciasAPI = {
     );
   },
 
+  listMinhas: async (page = 1, limit = 50) => {
+    return apiCall<PaginatedResponse<Denuncia>>(
+      `/denuncias/minhas?_page=${page}&_limit=${limit}`
+    );
+  },
+
   getById: async (id: number) => {
     return apiCall<Denuncia>(`/denuncias/${id}`);
   },

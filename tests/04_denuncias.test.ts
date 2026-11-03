@@ -154,7 +154,7 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
 
       expect(response.status).toBe(200);
       expect(response.body.data[0].id).toBe(999);
-      expect(mockRedisMethods.redisGet).toHaveBeenCalledWith('denuncias:1:50');
+      expect(mockRedisMethods.redisGet).toHaveBeenCalledWith('denuncias:all:1:50');
     });
 
     it('CT-DEN-08: Deve rejeitar listagem sem token e retornar status 401', async () => {
@@ -207,7 +207,7 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       expect(response.body.situacao).toBe('Finalizada');
     });
 
-    it('CT-DEN-13: Deve atualizar fotos/imagens anexadas na denúncia', async () => {
+    it('CT-DEN-13: PATCH deve alterar só a situação e ignorar imagens enviadas no corpo', async () => {
       const novasImagens = [
         'data:image/png;base64,nova_foto_1',
         'data:image/png;base64,nova_foto_2',
@@ -216,10 +216,12 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       const response = await request(app)
         .patch('/denuncias/1')
         .set('Authorization', getBearerHeader(tokenGestor))
-        .send({ imagens: novasImagens });
+        .send({ situacao: 'Finalizada', imagens: novasImagens });
 
       expect(response.status).toBe(200);
-      expect(response.body.imagens).toEqual(novasImagens);
+      expect(response.body.situacao).toBe('Finalizada');
+      expect(response.body.imagens).toEqual([expect.stringMatching(/^data:image\/png;base64,iVBOR/)]);
+      expect(mockPrisma.denuncia.update).toHaveBeenCalledWith({ where: { id: 1 }, data: { situacao: 'Finalizada' } });
     });
 
     it('CT-DEN-14: Deve rejeitar atualização sem autenticação com status 401', async () => {
@@ -228,6 +230,17 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
         .send({ situacao: 'Finalizada' });
 
       expect(response.status).toBe(401);
+    });
+
+    it('CT-DEN-18: Deve barrar com 403 o DENUNCIANTE que tenta alterar a situação, sem gravar nada', async () => {
+      const response = await request(app)
+        .patch('/denuncias/1')
+        .set('Authorization', getBearerHeader(tokenDenunciante))
+        .send({ situacao: 'Finalizada' });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({ success: false, error: 'Forbidden' });
+      expect(mockPrisma.denuncia.update).not.toHaveBeenCalled();
     });
   });
 
@@ -251,6 +264,52 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       const response = await request(app).delete('/denuncias/1');
 
       expect(response.status).toBe(401);
+    });
+
+    it('CT-DEN-19: Deve barrar com 403 o DENUNCIANTE que tenta excluir denúncia, que continua existindo', async () => {
+      const response = await request(app)
+        .delete('/denuncias/1')
+        .set('Authorization', getBearerHeader(tokenDenunciante));
+
+      expect(response.status).toBe(403);
+
+      const verify = await request(app)
+        .get('/denuncias/1')
+        .set('Authorization', getBearerHeader(tokenGestor));
+
+      expect(verify.status).toBe(200);
+    });
+  });
+
+  describe('GET /denuncias/minhas - Histórico do Cidadão', () => {
+    it('CT-DEN-20: Deve listar só as denúncias do próprio usuário, inclusive as anônimas', async () => {
+      const tokenOutroCidadao = generateDenuncianteToken({ id: 50, email: 'outro@sos.com' });
+      await request(app)
+        .post('/denuncias')
+        .set('Authorization', getBearerHeader(tokenOutroCidadao))
+        .send({
+          tipoDenuncia: 'Alagamento',
+          identificacao: true,
+          bairroOcorrencia: 'Várzea',
+          descricaoOcorrencia: 'Rua alagada há três dias sem escoamento',
+          dataOcorrencia: '2026-10-14',
+        });
+
+      const minhas = await request(app)
+        .get('/denuncias/minhas')
+        .set('Authorization', getBearerHeader(tokenDenunciante));
+
+      expect(minhas.status).toBe(200);
+      expect(minhas.body.meta.total).toBe(3);
+      expect(minhas.body.data.map((d: any) => d.userId)).toEqual([1, 1, 1]);
+      expect(minhas.body.data.some((d: any) => d.nomeDenunciante === 'Anônimo')).toBe(true);
+
+      const doOutro = await request(app)
+        .get('/denuncias/minhas')
+        .set('Authorization', getBearerHeader(tokenOutroCidadao));
+
+      expect(doOutro.body.meta.total).toBe(1);
+      expect(doOutro.body.data[0].userId).toBe(50);
     });
   });
 
