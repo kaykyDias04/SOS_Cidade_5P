@@ -7,7 +7,7 @@
 | **Equipe / Squad** | Equipe 8 |
 | **Produto / SUT** | SOS Cidade |
 | **Integrantes** | João Pedro do Monte Souza; Pedro Henrique Rennil da Silva Souza; Gabriel Cavalcante Barros de Oliveira; Alan Vitor Ferreira Sobral; Drielly Santiago dos Santos; Kayky Dias de Oliveira; Pedro Soares Rangel; Glauco Santos; Marcos Antônio Taveira Fraga; João Guillherme Aires Chagas |
-| **Data** | 30/09/2026 (versão 1) |
+| **Data** | 27/10/2026 (versão 2 — Alinhamento de Pipeline e Quality Gate) |
 
 ---
 
@@ -283,22 +283,24 @@ Escalas de 1 a 3. Heurística de ordenação. Empate se desfaz pelo risco; persi
 
 | Ordem | ID do caso | HU | Nível | Risco | Custo | Frequência | Prioridade | Responsável | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Autorização por perfil, 403 (a criar) | HU-03 (CA01 e CA02) | Integração | 3 | 1 | 3 | 9,0 | A definir | A fazer |
-| 2 | CT-DEN-04, 08, 11, 14, 16 | HU-03 (CA05, sem token) | Integração | 3 | 1 | 3 | 9,0 | A definir | Automatizado (`tests/04_denuncias.test.ts`) |
-| 3 | CT-AUT-11 | HU-02 (sessão e token) | Integração | 2 | 1 | 3 | 6,0 | A definir | Automatizado (`tests/02_auth.test.ts`) |
-| 4 | R2-CT-53 a R2-CT-55 | HU-13 (transição proibida) | Componente | 3 | 2 | 3 | 4,5 | A definir | A fazer |
-| 5 | CT-DEN-02 | Denúncia anônima | Integração | 3 | 2 | 3 | 4,5 | A definir | Automatizado (`tests/04_denuncias.test.ts`) |
-| 6 | CT-DEN-12 | HU-13 (transição válida) | Integração | 2 | 2 | 3 | 3,0 | A definir | Automatizado (`tests/04_denuncias.test.ts`) |
-| 7 | CT-USR-03 | HU-01 (e-mail duplicado) | Integração | 1 | 1 | 3 | 3,0 | A definir | Automatizado (`tests/03_users.test.ts`) |
-| 8 | E2E Denunciante | HU-06, HU-08 | Sistema | 3 | 3 | 2 | 2,0 | A definir | Automatizado (`e2e/tests/denunciante-fluxo-completo.spec.ts`) |
-| 9 | CT-DEN-07 e CT-DEN-17 | Listagem e cache | Integração | 2 | 3 | 3 | 2,0 | A definir | Automatizado (`tests/04_denuncias.test.ts`) |
-| 10 | CT-DEN-13 | Imagens da denúncia | Integração | 1 | 2 | 2 | 1,0 | A definir | Automatizado (`tests/04_denuncias.test.ts`) |
+| 1 | Autorização por perfil, 403 | HU-03 (CA01 e CA02) | Integração / Componente | 3 | 1 | 3 | 9,0 | Equipe | Automatizado (`tests/02_auth.test.ts: CT-AUT-12`, `tests/03_users.test.ts: CT-USR-10, 11`, `tests/04_denuncias.test.ts: CT-DEN-18, 19`, `backend/tests/unit/authorize.middleware.test.ts: UN-PERFIL-01 a 04`) |
+| 2 | CT-DEN-04, 08, 11, 14, 16 | HU-03 (CA05, sem token) | Integração | 3 | 1 | 3 | 9,0 | Equipe | Automatizado (`tests/04_denuncias.test.ts`) |
+| 3 | CT-AUT-11 | HU-02 (sessão e token) | Integração | 2 | 1 | 3 | 6,0 | Equipe | Automatizado (`tests/02_auth.test.ts`) |
+| 4 | R2-CT-53 a R2-CT-55 | HU-13 (transição proibida) | Componente | 3 | 2 | 3 | 4,5 | Equipe | Pendente no backend (regra de máquina de estados não implementada no código do SUT) |
+| 5 | CT-DEN-02 e CT-DEN-20 | Denúncia anônima e histórico | Integração / Componente | 3 | 2 | 3 | 4,5 | Equipe | Automatizado (`tests/04_denuncias.test.ts: CT-DEN-02, 20` e `backend/tests/unit/denuncia.service.test.ts: UN-DENUNCIA-01, 02, 05`) |
+| 6 | CT-DEN-12 | HU-13 (transição válida) | Integração | 2 | 2 | 3 | 3,0 | Equipe | Automatizado (`tests/04_denuncias.test.ts`) |
+| 7 | CT-USR-03 | HU-01 (e-mail duplicado) | Integração | 1 | 1 | 3 | 3,0 | Equipe | Automatizado (`tests/03_users.test.ts`) |
+| 8 | E2E Denunciante | HU-06, HU-08 | Sistema | 3 | 3 | 2 | 2,0 | Equipe | Automatizado (`e2e/tests/fluxo-denuncia-cidadao.spec.ts` [@smoke] e `e2e/tests/denunciante-fluxo-completo.spec.ts`) |
+| 9 | CT-DEN-07 e CT-DEN-17 | Listagem e cache | Integração | 2 | 3 | 3 | 2,0 | Equipe | Automatizado (`tests/04_denuncias.test.ts`) |
+| 10 | CT-DEN-13 | Imagens da denúncia | Integração | 1 | 2 | 2 | 1,0 | Equipe | Automatizado (`tests/04_denuncias.test.ts`) |
+| 11 | E2E Gestor | HU-10, HU-14 | Sistema | 3 | 3 | 2 | 2,0 | Equipe | Automatizado (`e2e/tests/gestor-fluxo.spec.ts` [@smoke]) |
 
 Desempates: ordens 1 e 2 (9,0), o caso ainda não automatizado vem primeiro. Ordens 4 e 5 (4,5), mesma regra. Ordens 6 e 7 (3,0), risco 2 contra 1. Ordens 8 e 9 (2,0), risco 3 contra 2.
 
 **Verificação**
 
 - [x] O primeiro item é de risco alto, custo baixo e frequência alta.
+- [x] Todos os casos prioritários implementados possuem cobertura automatizada ativa na pipeline.
 
 ---
 
@@ -307,7 +309,56 @@ Desempates: ordens 1 e 2 (9,0), o caso ainda não automatizado vem primeiro. Ord
 1. As saídas das rodadas 1 e 2 (`docs/testes/ia/saida-rodada-1.md` e `saida-rodada-2.md`) são reexecuções de 30/09/2026; substituir pelas conversas originais, se forem recuperadas.
 2. O prompt revisado da rodada 2 foi reconstruído e deve ser substituído pelo original.
 3. Tm, Ti, Mn e F da seção 5 são estimativas e devem ser substituídos por tempos cronometrados.
-4. A coluna Responsável do backlog será preenchida na próxima versão.
+4. A coluna Responsável do backlog foi consolidada pela squad para a entrega da versão 2.
 5. As HU-01 a HU-16 pertencem a um domínio de demandas urbanas ligeiramente diferente do SOS Cidade; a rastreabilidade marca como suposição o que só existe no produto.
-6. Confirmado no repositório: CT-DEN-04, 08, 11, 14 e 16 verificam apenas a resposta 401 sem token. Não há teste de autorização por perfil (403), que entra no backlog como caso a criar.
-7. Confirmado no repositório: não há teste que verifique que uma denúncia anônima aparece no histórico do próprio autor (CT-DEN-02 só verifica a gravação de "Anônimo" na criação), nem teste de transição de status inválida (R2-CT-53 a R2-CT-55). Ambos são lacunas de cobertura a tratar na versão 2.
+6. **Resolvido na versão 2**: A autorização por perfil (403) foi totalmente implementada e coberta nos níveis unitário (`UN-PERFIL-01` a `04`), de integração de API (`CT-AUT-12`, `CT-USR-10`, `CT-USR-11`, `CT-DEN-18`, `CT-DEN-19`) e ponta a ponta (`gestor-fluxo.spec.ts`), garantindo que o perfil `DENUNCIANTE` não execute operações reservadas ao perfil `GESTOR`.
+7. **Atualizado na versão 2**: O comportamento da denúncia anônima foi coberto de ponta a ponta, incluindo a criação com anonimização (`CT-DEN-02`, `UN-DENUNCIA-01/02`) e a permanência no histórico do próprio autor (`CT-DEN-20`, `UN-DENUNCIA-05`). Quanto à recusa de transições de status inválidas (`R2-CT-53` a `R2-CT-55`), a inspeção no código-fonte do backend (`denuncia.service.ts` e `denuncia.controller.ts`) confirmou que o produto ainda não implementa a máquina de estados para impedir retrocessos de situação (qualquer valor enviado é aceito pelo serviço). Por isso, a automação desse caso permanece pendente da implementação da regra pelo time de desenvolvimento.
+8. **Unificação da suíte E2E**: O cenário E2E autocontido do cidadão foi unificado em `e2e/tests/fluxo-denuncia-cidadao.spec.ts`, eliminando a pasta redundante `tests/e2e/`.
+
+---
+
+## 8. Alinhamento: Backlog × Testes Implementados × Pipeline de CI/CD
+
+Esta seção consolida o alinhamento exigido pela disciplina, demonstrando onde cada verificação automatizada é executada na esteira de integração contínua (GitHub Actions) e como o Quality Gate protege a qualidade do produto.
+
+### 8.1 Matriz de Divergências e Decisões da Equipe (Checklist 2.1 a 2.4)
+
+| Item / Condição | O que o backlog inicial dizia | O que existe no repositório | Divergência | Decisão da Equipe |
+| --- | --- | --- | --- | --- |
+| **Autorização por perfil (403)** | "A fazer" (item 1 do backlog) | `UN-PERFIL-01 a 04` (unitários), `CT-AUT-12`, `CT-USR-10/11`, `CT-DEN-18/19` (API) e `gestor-fluxo.spec.ts` (E2E) | O teste já havia sido implementado após a rodada 1 do plano | Atualizar o status para **Automatizado** e rastrear todos os IDs correspondentes. |
+| **Denúncia anônima no histórico do autor** | "Sem teste" (limitação 7) | `CT-DEN-20` (API) e `UN-DENUNCIA-05` (unitário) | Funcionalidade coberta em API e unitário | Atualizar para **Automatizado** e remover da lista de pendências. |
+| **Transições inválidas de status (R2-CT-53 a 55)** | "A fazer" (item 4 do backlog) | Apenas a transição válida (`CT-DEN-12`) possui teste | Regra de negócio ausente no backend | Manter como **Pendente no backend**, justificando que o SUT não valida a máquina de estados antes de gravar. |
+| **Testes unitários (`UN-*`, `ATDD`, `BDD`, `TDD`)** | Não apareciam no backlog detalhado | 26 testes no backend e 8 no frontend | Casos implementados não listados no backlog inicial | Incorporar na tabela de alinhamento com execução a cada push (`unit-api`). |
+| **E2E do Gestor (`gestor-fluxo.spec.ts`)** | Não aparecia no backlog | 2 testes automatizados com Playwright | Suíte implementada não registrada | Adicionar ao backlog como **Automatizado** e marcar com tag `@smoke`. |
+| **Pasta duplicada `tests/e2e/`** | Não aparecia no plano | 1 teste isolado em `tests/e2e/tests/fluxo-denuncia-cidadao.spec.ts` | Teste fora da suíte padrão de execução | Migrar o teste autocontido para `e2e/tests/fluxo-denuncia-cidadao.spec.ts`, marcar com `@smoke` e remover a pasta legada `tests/e2e/`. |
+| **Dashboard e mapa de ocorrências** | "Manuais" (seção 5) | Sem automação E2E | Alinhado com a decisão de ROI | Permanecem com **verificação manual**, conforme justificativa de custo da seção 5. |
+
+### 8.2 Tabela de Alinhamento Final com a Pipeline (Checklist 6.2)
+
+A tabela a seguir correlaciona cada caso de teste automatizado ao seu arquivo fonte e ao respectivo evento/job da pipeline no GitHub Actions:
+- **`unit-api`**: Executa a cada `push` e em todo `pull_request` (testes unitários e de integração de API com mocks rápidos).
+- **`e2e-smoke`**: Executa antes de cada merge (`pull_request`), rodando os 3 testes críticos autocontidos contra a aplicação completa (frontend, backend, banco e cache).
+- **`regressao-completa`**: Executa diariamente via agendamento noturno (`schedule: cron`) e sob demanda manual (`workflow_dispatch`), cobrindo toda a suíte automatizada.
+
+| ID no Backlog / Caso | Nível | Descrição do Teste | Arquivo de Teste Implementado | Onde roda na Pipeline |
+| --- | --- | --- | --- | --- |
+| **UN-PERFIL-01 a 04** | Componente | Validação de perfil GESTOR vs DENUNCIANTE (403) no middleware | `backend/tests/unit/authorize.middleware.test.ts` | `unit-api` e `regressao-completa` |
+| **UN-SESSAO-01 a 05** | Componente | Middleware de autenticação JWT, cookies HttpOnly e Bearer | `backend/tests/unit/auth.middleware.test.ts` | `unit-api` e `regressao-completa` |
+| **UN-CRIPTO-01 a 07** | Componente | Criptografia AES-256-GCM para dados sensíveis em repouso | `backend/tests/unit/crypto.test.ts` | `unit-api` e `regressao-completa` |
+| **UN-DENUNCIA-01 a 05** | Componente | Anonimização, descrição cifrada e histórico com cache | `backend/tests/unit/denuncia.service.test.ts` | `unit-api` e `regressao-completa` |
+| **UN-USUARIO-01 a 05** | Componente | Validação de senha, role padrão e hash bcrypt de usuário | `backend/tests/unit/user.service.test.ts` | `unit-api` e `regressao-completa` |
+| **ATDD-01 e 02** | Componente | Denúncia anônima para gestor e atualização para Finalizada | `frontend/tests/atdd.test.mjs` | `unit-api` e `regressao-completa` |
+| **BDD-01 e 02** | Componente | Login de denunciante e validação de campos vazios | `frontend/tests/bdd.test.mjs` | `unit-api` e `regressao-completa` |
+| **TDD-01a/b, 02a/b** | Componente | Validação de descrição mínima e gerador de protocolo | `frontend/tests/tdd.test.mjs` | `unit-api` e `regressao-completa` |
+| **CT-INF-01 a 06** | Integração | Health check, Swagger, 404 de rotas/métodos e cabeçalhos CORS | `tests/01_health_and_routing.test.ts` | `unit-api` e `regressao-completa` |
+| **CT-AUT-01 a 12** | Integração | Login, cookies seguros, rejeição de credenciais e bloqueio 403 de denunciante | `tests/02_auth.test.ts` | `unit-api` e `regressao-completa` |
+| **CT-USR-01 a 12** | Integração | Cadastro de denunciante, e-mail duplicado, exclusão e bloqueio 403 de denunciante | `tests/03_users.test.ts` | `unit-api` e `regressao-completa` |
+| **CT-DEN-01 a 20** | Integração | Criação, denúncia anônima, paginação, cache Redis, exclusão, bloqueios 403 e histórico pessoal | `tests/04_denuncias.test.ts` | `unit-api` e `regressao-completa` |
+| **CT-CON-01 a 04** | Integração | Validação de contrato OpenAPI/Swagger dos modelos User e Denuncia | `tests/05_api_contracts.test.ts` | `unit-api` e `regressao-completa` |
+| **E2E Smoke: Cidadão** | Sistema | Jornada completa: cadastro, login, abertura de denúncia e confirmação no histórico | `e2e/tests/fluxo-denuncia-cidadao.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
+| **E2E Smoke: Gestor** | Sistema | Login administrativo com seed e acesso ao Dashboard Interativo | `e2e/tests/gestor-fluxo.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
+| **E2E Smoke: Segurança** | Sistema | Tentativa de acesso do cidadão comum a rotas administrativas do gestor | `e2e/tests/gestor-fluxo.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
+| **E2E Jornada Denunciante** | Sistema | Testes modulares da jornada (cadastro, login positivo/negativo e nova denúncia) | `e2e/tests/denunciante-fluxo-completo.spec.ts` | `regressao-completa` |
+| **R2-CT-53 a 55** | Componente | Transição proibida de status (Finalizada → Em Andamento) | *Sem teste implementado* | *Pendente da implementação da regra no backend* |
+| **E2E Dashboard & Mapa** | Sistema | Consistência visual e mapa de calor por bairro | *Verificação manual* | *Execução manual por release (decisão de ROI da seção 5)* |
+
