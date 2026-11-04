@@ -38,3 +38,6 @@ node_modules/
 playwright-report/ 
 test-results/ 
 .agents/
+
+# resultados dos testes em JUnit XML (gerados a cada execução)
+resultados/
