@@ -33,9 +33,25 @@ jobs:
       - name: Instalar dependências do backend
         run: npm ci --prefix backend
 
-      - name: Testes unitários
-        run: npm run test:unit
+      # Frontend e backend em passos separados: se um falhar, o outro roda mesmo
+      # assim e o seu XML não fica faltando nas métricas.
+      - name: Testes unitários (frontend)
+        run: npm run test:unit:frontend
+
+      - name: Testes unitários (backend)
+        if: ${{ !cancelled() }}
+        run: npm run test:unit:backend
 
       - name: Testes de API
         if: ${{ !cancelled() }}
         run: npm run test:api
+
+      # Sobe sempre, verde ou vermelho: os XML alimentam as métricas e os relatórios.
+      - name: Salvar resultados dos testes
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: resultados-testes
+          path: resultados/
+          retention-days: 30
+          overwrite: true
