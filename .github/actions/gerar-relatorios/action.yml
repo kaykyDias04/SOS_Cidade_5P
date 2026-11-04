@@ -1,0 +1,27 @@
+name: "Gerar Relatórios de Qualidade e Métricas"
+description: "Calcula métricas dos testes (JUnit XML), backlog e pipeline, gerando relatórios HTML técnico e de negócio."
+
+inputs:
+  pasta-xml:
+    description: "Caminho da pasta que contém os arquivos XML JUnit"
+    required: false
+    default: "resultados"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Executar cálculo de métricas e geração de relatórios
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        python3 .github/actions/gerar-relatorios/metricas_relatorios.py "${{ inputs.pasta-xml }}"
+
+    - name: Publicar artefato dos relatórios HTML
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: relatorios-qualidade
+        path: relatorios/
+        retention-days: 30
+

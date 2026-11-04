@@ -58,6 +58,12 @@ jobs:
           retention-days: 30
           overwrite: true
 
+      - name: Gerar relatórios de qualidade e métricas
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/gerar-relatorios
+        with:
+          pasta-xml: resultados
+
       # Só no push na main: em PR, falhar durante o desenvolvimento é normal e
       # viraria barulho. Na main, falha quer dizer que algo quebrado entrou.
       - name: Abrir issue de falha
