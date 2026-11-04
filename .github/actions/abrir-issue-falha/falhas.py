@@ -46,6 +46,8 @@ def main(pasta):
         try:
             raiz = ET.parse(arquivo).getroot()
         except ET.ParseError:
+            # Conta o arquivo como um resultado, senão a issue mostraria "1 de 0".
+            total += 1
             falhas.append((arquivo.stem, "(arquivo XML corrompido)", "", "não foi possível ler o arquivo"))
             continue
         for caso in raiz.iter("testcase"):
