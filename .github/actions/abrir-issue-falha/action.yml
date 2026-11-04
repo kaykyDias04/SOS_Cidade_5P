@@ -1,0 +1,77 @@
+name: Abrir issue de falha
+description: >-
+  Abre uma issue no GitHub quando a pipeline falha, com os testes que falharam
+  (lidos dos JUnit XML em resultados/) e os links da execução e dos artefatos.
+  Se já houver uma issue aberta para o mesmo workflow e branch, comenta nela em
+  vez de abrir outra. O job que usa esta action precisa da permissão issues: write.
+
+inputs:
+  artefato-url:
+    description: Link do artefato resultados-testes (saída artifact-url do upload-artifact).
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Abrir ou atualizar issue de falha
+      shell: bash
+      # Contexto do GitHub entra por variável de ambiente, nunca direto no script:
+      # nome de branch é texto de quem fez o push.
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        WORKFLOW: ${{ github.workflow }}
+        EVENTO: ${{ github.event_name }}
+        BRANCH: ${{ github.ref_name }}
+        COMMIT: ${{ github.sha }}
+        EXECUCAO_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+        ARTEFATO_URL: ${{ inputs.artefato-url }}
+        SCRIPT_FALHAS: ${{ github.action_path }}/falhas.py
+      run: |
+        set -euo pipefail
+        label="falha-pipeline"
+        titulo="Falha na pipeline: ${WORKFLOW} (${BRANCH})"
+        quando="$(TZ=America/Recife date '+%d/%m/%Y às %H:%M')"
+        artefato="${ARTEFATO_URL:-$EXECUCAO_URL}"
+        falhas="$(python3 "$SCRIPT_FALHAS" resultados || echo 'Não foi possível ler os resultados dos testes. Veja a execução.')"
+
+        {
+          echo "- **Workflow:** ${WORKFLOW}"
+          echo "- **Evento:** ${EVENTO}"
+          echo "- **Branch:** ${BRANCH}"
+          echo "- **Commit:** [\`${COMMIT:0:7}\`](${COMMIT_URL})"
+          echo "- **Execução:** ${EXECUCAO_URL}"
+          echo "- **Artefatos** (XML, logs e relatório do E2E): ${artefato}"
+          echo
+          echo "$falhas"
+        } > "$RUNNER_TEMP/detalhes.md"
+
+        gh label create "$label" --color B60205 \
+          --description "Aberta automaticamente quando a pipeline falha" --force
+
+        # Lista as issues abertas sem usar a busca do GitHub, que demora a indexar,
+        # e compara o título exato.
+        existente="$(gh issue list --label "$label" --state open --limit 100 --json number,title \
+          | jq -r --arg titulo "$titulo" '.[] | select(.title == $titulo) | .number' | head -n 1)"
+
+        if [ -n "$existente" ]; then
+          {
+            echo "A pipeline falhou de novo em ${quando}."
+            echo
+            cat "$RUNNER_TEMP/detalhes.md"
+          } > "$RUNNER_TEMP/corpo.md"
+          gh issue comment "$existente" --body-file "$RUNNER_TEMP/corpo.md"
+          echo "Falha registrada como comentário na issue #${existente}."
+        else
+          {
+            echo "A pipeline falhou em ${quando} e esta issue foi aberta automaticamente."
+            echo
+            cat "$RUNNER_TEMP/detalhes.md"
+            echo
+            echo "---"
+            echo "Enquanto esta issue estiver aberta, cada nova falha do mesmo workflow e branch vira um comentário aqui. Feche quando a pipeline voltar a passar."
+          } > "$RUNNER_TEMP/corpo.md"
+          gh issue create --title "$titulo" --label "$label" --body-file "$RUNNER_TEMP/corpo.md"
+        fi

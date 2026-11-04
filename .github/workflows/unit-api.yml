@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # abrir issue automática quando a main quebra
 
 # Um push novo na mesma branch cancela a execução anterior ainda em andamento.
 concurrency:
@@ -48,6 +49,7 @@ jobs:
 
       # Sobe sempre, verde ou vermelho: os XML alimentam as métricas e os relatórios.
       - name: Salvar resultados dos testes
+        id: artefato
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
@@ -55,3 +57,11 @@ jobs:
           path: resultados/
           retention-days: 30
           overwrite: true
+
+      # Só no push na main: em PR, falhar durante o desenvolvimento é normal e
+      # viraria barulho. Na main, falha quer dizer que algo quebrado entrou.
+      - name: Abrir issue de falha
+        if: ${{ failure() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: ./.github/actions/abrir-issue-falha
+        with:
+          artefato-url: ${{ steps.artefato.outputs.artifact-url }}

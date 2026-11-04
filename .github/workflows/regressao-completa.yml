@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # abrir issue automática quando a regressão falha
 
 jobs:
   regressao-completa:
@@ -60,6 +61,7 @@ jobs:
       # Sobe sempre, verde ou vermelho: XML de todas as suítes, logs do backend e do
       # frontend (gerados pela action subir-stack) e o relatório HTML do E2E.
       - name: Salvar resultados dos testes
+        id: artefato
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
@@ -71,3 +73,10 @@ jobs:
             e2e/playwright-report/
           retention-days: 30
           overwrite: true
+
+      # Falha de madrugada ninguém vê: abre issue (ou comenta na que já está aberta).
+      - name: Abrir issue de falha
+        if: ${{ failure() }}
+        uses: ./.github/actions/abrir-issue-falha
+        with:
+          artefato-url: ${{ steps.artefato.outputs.artifact-url }}
