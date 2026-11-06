@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # abrir issue automática quando a regressão falha
 
 jobs:
   regressao-completa:
@@ -40,8 +41,14 @@ jobs:
 
       - uses: ./.github/actions/subir-stack
 
-      - name: Testes unitários
-        run: npm run test:unit
+      # Frontend e backend em passos separados: se um falhar, o outro roda mesmo
+      # assim e o seu XML não fica faltando nas métricas.
+      - name: Testes unitários (frontend)
+        run: npm run test:unit:frontend
+
+      - name: Testes unitários (backend)
+        if: ${{ !cancelled() }}
+        run: npm run test:unit:backend
 
       - name: Testes de API
         if: ${{ !cancelled() }}
@@ -51,9 +58,31 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run test:e2e
 
-      - name: Relatório E2E (só em falha)
-        if: ${{ failure() }}
+      # Sobe sempre, verde ou vermelho: XML de todas as suítes, logs do backend e do
+      # frontend (gerados pela action subir-stack) e o relatório HTML do E2E.
+      - name: Salvar resultados dos testes
+        id: artefato
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: relatorio-e2e
-          path: e2e/playwright-report/
+          name: resultados-testes
+          path: |
+            resultados/
+            backend/backend.log
+            frontend/frontend.log
+            e2e/playwright-report/
+          retention-days: 30
+          overwrite: true
+
+      - name: Gerar relatórios de qualidade e métricas
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/gerar-relatorios
+        with:
+          pasta-xml: resultados
+
+      # Falha de madrugada ninguém vê: abre issue (ou comenta na que já está aberta).
+      - name: Abrir issue de falha
+        if: ${{ failure() }}
+        uses: ./.github/actions/abrir-issue-falha
+        with:
+          artefato-url: ${{ steps.artefato.outputs.artifact-url }}

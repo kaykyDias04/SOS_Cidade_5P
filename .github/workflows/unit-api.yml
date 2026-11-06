@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # abrir issue automática quando a main quebra
 
 # Um push novo na mesma branch cancela a execução anterior ainda em andamento.
 concurrency:
@@ -33,9 +34,40 @@ jobs:
       - name: Instalar dependências do backend
         run: npm ci --prefix backend
 
-      - name: Testes unitários
-        run: npm run test:unit
+      # Frontend e backend em passos separados: se um falhar, o outro roda mesmo
+      # assim e o seu XML não fica faltando nas métricas.
+      - name: Testes unitários (frontend)
+        run: npm run test:unit:frontend
+
+      - name: Testes unitários (backend)
+        if: ${{ !cancelled() }}
+        run: npm run test:unit:backend
 
       - name: Testes de API
         if: ${{ !cancelled() }}
         run: npm run test:api
+
+      # Sobe sempre, verde ou vermelho: os XML alimentam as métricas e os relatórios.
+      - name: Salvar resultados dos testes
+        id: artefato
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: resultados-testes
+          path: resultados/
+          retention-days: 30
+          overwrite: true
+
+      - name: Gerar relatórios de qualidade e métricas
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/gerar-relatorios
+        with:
+          pasta-xml: resultados
+
+      # Só no push na main: em PR, falhar durante o desenvolvimento é normal e
+      # viraria barulho. Na main, falha quer dizer que algo quebrado entrou.
+      - name: Abrir issue de falha
+        if: ${{ failure() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: ./.github/actions/abrir-issue-falha
+        with:
+          artefato-url: ${{ steps.artefato.outputs.artifact-url }}
