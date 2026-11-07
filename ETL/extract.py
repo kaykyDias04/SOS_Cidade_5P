@@ -1,5 +1,7 @@
+from datetime import datetime, timezone
+
 import requests
-from pymongo import MongoClient
+from pymongo import DESCENDING, MongoClient
 from pymongo.server_api import ServerApi
 
 try:
@@ -48,7 +50,7 @@ class Extract:
 
         Returns:
             O JSON bruto da API, acrescido das chaves "_cidade",
-            "_data_inicio" e "_data_fim".
+            "_data_inicio", "_data_fim" e "data_extracao".
 
         Raises:
             ValueError: se alguma variável não existir em VARIAVEIS_DIARIAS.
@@ -80,15 +82,60 @@ class Extract:
         payload["_cidade"] = self.CIDADE
         payload["_data_inicio"] = data_inicio
         payload["_data_fim"] = data_fim
+        payload["data_extracao"] = datetime.now(timezone.utc).isoformat()
 
+        qtd_dias = len(payload.get("daily", {}).get("time", []))
         print(
             f"Dados extraídos com sucesso da Open-Meteo "
-            f"({self.CIDADE}, {data_inicio} -> {data_fim})!"
+            f"({self.CIDADE}, {data_inicio} -> {data_fim}, {qtd_dias} registros, "
+            f"data_extracao={payload['data_extracao']})!"
         )
         return payload
 
-    def extract_collection_from_mongo(self, db_name: str, collection_name: str) -> list[dict]:
-        """Lê todos os documentos de uma coleção do MongoDB.
+    def extract_latest_from_mongo(
+        self,
+        db_name: str = config.MONGO_DB,
+        collection_name: str = config.MONGO_COLLECTION,
+    ) -> dict:
+        """Lê apenas a carga bruta mais recente do MongoDB com base em data_extracao.
+
+        Não apaga nenhum documento anterior da coleção (preserva o histórico
+        completo na camada bronze).
+
+        Args:
+            db_name: nome do banco de dados no MongoDB.
+            collection_name: nome da coleção a ser lida.
+
+        Returns:
+            O documento bruto correspondente à carga mais recente.
+
+        Raises:
+            ValueError: se a coleção estiver vazia.
+        """
+        collection = self.client[db_name][collection_name]
+        total_cargas = collection.count_documents({})
+        documento = collection.find_one(
+            sort=[("data_extracao", DESCENDING), ("_id", DESCENDING)]
+        )
+
+        if documento is None:
+            raise ValueError(
+                f"Nenhum documento encontrado na coleção '{db_name}.{collection_name}'."
+            )
+
+        data_ext = documento.get("data_extracao", "sem data_extracao")
+        print(
+            f"Carga mais recente lida com sucesso de '{collection_name}' "
+            f"(data_extracao={data_ext} | total de cargas preservadas no Mongo: {total_cargas})!"
+        )
+        return documento
+
+    def extract_collection_from_mongo(
+        self,
+        db_name: str = config.MONGO_DB,
+        collection_name: str = config.MONGO_COLLECTION,
+    ) -> list[dict]:
+        """Lê todos os documentos de uma coleção do MongoDB ordenados por data_extracao.
 
         Args:
             db_name: nome do banco de dados.
@@ -98,7 +145,12 @@ class Extract:
             Lista de documentos (dicionários) da coleção.
         """
         collection = self.client[db_name][collection_name]
-        documentos = list(collection.find())
+        documentos = list(
+            collection.find().sort([("data_extracao", 1), ("_id", 1)])
+        )
 
-        print(f"Dados lidos com sucesso da coleção '{collection_name}'!")
+        print(
+            f"Dados lidos com sucesso da coleção '{collection_name}' "
+            f"({len(documentos)} carga(s) armazenada(s))!"
+        )
         return documentos

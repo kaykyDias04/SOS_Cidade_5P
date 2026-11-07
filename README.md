@@ -148,3 +148,69 @@ Todas as chamadas exigem autenticacao (exceto login/cadastro). Os dados tecnicos
 | GET        | /denuncias/{id}     | Busca detalhes de uma ocorrencia    |
 | PATCH      | /denuncias/{id}     | Altera status da ocorrencia         |
 | DELETE     | /denuncias/{id}     | Remove uma ocorrencia do banco      |
+
+
+---
+
+## Pipeline de Dados (ETL), Orquestração (Prefect) e Dashboard (Streamlit)
+
+O módulo de dados do projeto coleta o histórico meteorológico diário da cidade do **Recife** a partir da API pública **Open-Meteo Archive**, armazena os dados brutos no **MongoDB Atlas** (camada Bronze), realiza o tratamento e validação em Python com orientação a objetos (`Extract`, `Transform`, `Load`) e persiste os dados estruturados no **NeonDB (PostgreSQL em nuvem)**, alimentando um dashboard interativo em **Streamlit**.
+
+### Fluxo da Arquitetura de Dados
+
+```text
+API Open-Meteo (JSON Bruto + data_extracao)
+        ↓
+MongoDB Atlas (Camada Bronze — histórico preservado sem apagar cargas anteriores)
+        ↓
+Transformação (Lê apenas a carga mais recente por data_extracao, trata nulos e valida volumetria)
+        ↓
+NeonDB PostgreSQL (Tabela final: clima_historico)
+        ↓
+Dashboard Streamlit (dashboard/app.py)
+```
+
+### Estrutura dos Arquivos de Dados
+
+- `ETL/config.py`: Lê o arquivo `.env` uma única vez (tanto na raiz quanto em `ETL/.env`) e centraliza as variáveis `MONGODB_URI`, `NEON_DATABASE_URL`, `MONGO_DB`, `MONGO_COLLECTION` e `NEON_TABLE`. Nenhum outro arquivo chama `os.getenv`.
+- `ETL/extract.py`: Classe `Extract` — extrai os dados climáticos da API Open-Meteo marcando cada carga com `data_extracao` (UTC ISO-8601) e recupera apenas a carga mais recente do MongoDB Atlas (`extract_latest_from_mongo`).
+- `ETL/transform.py`: Classe `Transform` — seleciona a carga mais recente por `data_extracao`, transforma todas as listas paralelas de `daily` sem descartar registros, trata valores ausentes como `NULL` e compara a quantidade de registros da camada Bronze com o DataFrame transformado.
+- `ETL/load.py`: Classe `Load` — insere o JSON bruto no MongoDB Atlas preservando cargas anteriores e grava o DataFrame transformado no NeonDB (`clima_historico`), conferindo via `SELECT COUNT(*)` se o total gravado coincide com a camada Bronze.
+- `ETL/flow_prefect.py`: Orquestração da pipeline com o **Prefect** utilizando `@task` (`extrair_api_open_meteo`, `carregar_mongodb_atlas`, `extrair_mongodb_atlas`, `transformar_clima`, `carregar_neondb`) e `@flow` (`pipeline-clima-recife`), garantindo a ordem de execução e dependências (`wait_for`).
+- `dashboard/app.py`: Aplicação **Streamlit** conectada ao NeonDB usando a configuração de `ETL/config.py`, com filtros interativos, indicadores (`st.metric`) e gráficos de séries temporais.
+
+### Melhorias Aplicadas (Boas Práticas da Aula / Exemplo PNADC)
+
+1. **Centralização do `.env` (`ETL/config.py`)**:
+   - A leitura de variáveis de ambiente (`load_dotenv` e `os.getenv`) ocorre exclusivamente em `ETL/config.py`. Os módulos `extract.py`, `load.py`, `run_etl.py`, `flow_prefect.py` e `dashboard/app.py` importam `config` diretamente.
+2. **Controle de Carga por `data_extracao` sem Apagar Histórico**:
+   - Cada extração bruta recebe o carimbo `data_extracao` em formato UTC ISO-8601 antes de ser inserida no MongoDB Atlas.
+   - As cargas anteriores **não são apagadas** da coleção `OpenMeteo.ClimaBrasil` no MongoDB Atlas.
+   - Na etapa de releitura e transformação (`extract_latest_from_mongo` e `selecionar_carga_mais_recente`), apenas o documento com maior `data_extracao` é processado.
+3. **Integridade e Volumetria (Camada Bronze vs. Tabela Final)**:
+   - O `Transform` converte integralmente os arrays diários retornados em `daily` (`time`, `temperature_2m_max`, `temperature_2m_min`, `temperature_2m_mean`, `precipitation_sum`, `wind_speed_10m_max`), sem índices fixos como `[0]` que descartem itens.
+   - A quantidade de dias presentes no documento bruto do MongoDB (`len(daily["time"])`) é comparada automaticamente com `len(df)` na transformação e com `SELECT COUNT(*) FROM clima_historico` após a gravação no NeonDB. Para o período padrão (`2024-01-01` a `2024-01-31`), os **31 registros** da camada Bronze chegam integralmente aos **31 registros** da tabela final no NeonDB.
+4. **Representação e Tratamento de Dados Ausentes (Nulo vs. Zero)**:
+   - **Como a fonte Open-Meteo representa dado ausente**: Na API Open-Meteo Archive, quando uma observação diária ainda não foi consolidada ou está indisponível para uma data, o array correspondente dentro de `daily` traz o literal JSON `null` (`None` em Python). Em séries históricas já consolidadas (como janeiro de 2024 em Recife), a API entrega a série completa sem lacunas.
+   - **Como o pipeline trata**: O método `Transform.transform_clima` converte tanto `null`/`None` nativos do JSON quanto eventuais marcadores textuais (`""`, `"-"`, `"N/A"`, `"..."`, `"null"`) para `NaN`/`None` via `pd.to_numeric(..., errors="coerce")`, **sem usar `fillna(0)`**. Assim, qualquer valor ausente é gravado como `NULL` no PostgreSQL (NeonDB), evitando distorcer métricas físicas (já que `0 °C` ou `0 mm` de chuva representam medições reais e não ausência de dado).
+
+### Como Executar a Pipeline e o Dashboard
+
+1. Configure o arquivo `.env` na raiz do projeto (ou em `ETL/.env`) com base em `ETL/.env.example`:
+   ```env
+   MONGODB_URI=mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/?retryWrites=true&w=majority
+   NEON_DATABASE_URL=postgresql://<usuario>:<senha>@<host>.neon.tech/<banco>?sslmode=require
+   ```
+2. Instale as dependências:
+   ```bash
+   pip install -r ETL/requirements.txt
+   ```
+3. Execute a pipeline orquestrada com **Prefect**:
+   ```bash
+   python ETL/flow_prefect.py
+   ```
+   *(Opcional: para acompanhar no painel visual do Prefect, execute `prefect server start` em outro terminal).*
+4. Inicie o **Dashboard Streamlit** a partir da raiz do projeto:
+   ```bash
+   python -m streamlit run dashboard/app.py
+   ```
