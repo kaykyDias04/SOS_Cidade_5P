@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: rotular-manutencao-${{ github.event.issue.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   rotular:

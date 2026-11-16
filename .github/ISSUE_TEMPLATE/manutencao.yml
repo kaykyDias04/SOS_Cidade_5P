@@ -55,19 +55,12 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: execucao
-    attributes:
-      label: Execução onde a falha apareceu
-      description: Link do run no GitHub Actions ou da issue automática de falha-pipeline.
-      placeholder: "https://github.com/kaykyDias04/SOS_Cidade_5P/actions/runs/..."
 
   - type: textarea
     id: descricao
     attributes:
       label: O que aconteceu
-      description: Erro, trecho do log e o que se esperava.
-      render: text
+      description: Link do run no GitHub Actions ou da issue falha-pipeline, erro, trecho do log e o que se esperava.
     validations:
       required: true
 
@@ -114,4 +107,4 @@ body:
     id: justificativa
     attributes:
       label: Justificativa e riscos
-      description: Obrigatório em quarentena ou remoção. Diga o motivo, quem decidiu e qual risco fica sem cobertura.
+      description: "Obrigatório em quarentena ou remoção (o formulário não consegue exigir isso sozinho, quem revisa a issue confere). Diga o motivo, quem decidiu e qual risco fica sem cobertura."

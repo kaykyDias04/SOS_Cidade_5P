@@ -28,12 +28,15 @@ export function planejar(corpo, atuais) {
     const m = valor?.match(/\(((?:falha|prioridade):[a-z]+)\)\s*$/);
     if (m) desejadas.add(m[1]);
   }
+  // Só confia no corpo se a prioridade for uma opção do formulário: evita apagar
+  // labels de uma issue comum que por acaso tenha um título "### Prioridade".
+  if (![...desejadas].some((l) => l.startsWith('prioridade:'))) return null;
 
   const instavel = resposta(corpo, 'O teste é instável?');
   const adicionar = [...desejadas].filter((l) => !atuais.includes(l));
   const remover = atuais.filter((l) => GERENCIADAS.test(l) && !desejadas.has(l));
   if (instavel === 'Sim' && !atuais.includes('flaky')) adicionar.push('flaky');
-  if (instavel === 'Não' && atuais.includes('flaky')) remover.push('flaky');
+  if (instavel !== 'Sim' && atuais.includes('flaky')) remover.push('flaky');
   return { adicionar, remover };
 }
 
@@ -48,10 +51,13 @@ async function api(metodo, caminho, corpo) {
     body: corpo ? JSON.stringify(corpo) : undefined,
   });
   if (!r.ok && r.status !== 404) throw new Error(`${metodo} ${caminho}: HTTP ${r.status}`);
+  return r.status === 204 ? null : r.json();
 }
 
 async function main() {
-  const { issue } = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+  const evento = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+  // Relê a issue na hora: o evento pode ser antigo se houve várias edições seguidas.
+  const issue = await api('GET', `/issues/${evento.issue.number}`);
   const plano = planejar(issue.body, issue.labels.map((l) => l.name));
   if (!plano) return console.log('Issue fora do formulário de manutenção: nada a fazer.');
 
