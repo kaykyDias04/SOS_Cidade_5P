@@ -1,3 +1,4 @@
+import path from 'path';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -13,7 +14,13 @@ export default defineConfig({
   fullyParallel: false, // os testes compartilham o mesmo backend/banco, então rodam em série
   retries: 0,
   workers: 1,
-  reporter: [['html', { open: 'never' }], ['list']],
+  // junit: resultado em XML para a pipeline (artefato e métricas).
+  // Contrato: resultados/e2e.xml na raiz do repositório.
+  reporter: [
+    ['html', { open: 'never' }],
+    ['list'],
+    ['junit', { outputFile: path.resolve(__dirname, '../resultados/e2e.xml') }],
+  ],
   timeout: 30_000,
 
   use: {

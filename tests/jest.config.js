@@ -18,4 +18,20 @@ module.exports = {
   testTimeout: 10000,
   forceExit: true,
   clearMocks: true,
+  // Além da saída no terminal, grava o resultado em JUnit XML para a pipeline
+  // (artefato e cálculo de métricas). Contrato: resultados/api.xml na raiz.
+  // O jest-junit fica no node_modules do backend, como o ts-jest acima.
+  reporters: [
+    'default',
+    [
+      path.resolve(__dirname, '../backend/node_modules/jest-junit'),
+      {
+        outputDirectory: path.resolve(__dirname, '../resultados'),
+        outputName: 'api.xml',
+        suiteName: 'api',
+        addFileAttribute: 'true',
+        reportTestSuiteErrors: 'true',
+      },
+    ],
+  ],
 };

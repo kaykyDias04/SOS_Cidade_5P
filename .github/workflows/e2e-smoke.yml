@@ -45,9 +45,17 @@ jobs:
       - name: Testes E2E smoke
         run: npm run test:e2e:smoke
 
-      - name: Relatório E2E (só em falha)
-        if: ${{ failure() }}
+      # Sobe sempre, verde ou vermelho: XML do E2E, logs do backend e do frontend
+      # (gerados pela action subir-stack) e o relatório HTML do E2E.
+      - name: Salvar resultados dos testes
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: relatorio-e2e-smoke
-          path: e2e/playwright-report/
+          name: resultados-testes
+          path: |
+            resultados/
+            backend/backend.log
+            frontend/frontend.log
+            e2e/playwright-report/
+          retention-days: 30
+          overwrite: true
