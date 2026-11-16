@@ -41,3 +41,6 @@ test-results/
 
 # resultados dos testes em JUnit XML (gerados a cada execução)
 resultados/
+
+# relatórios HTML de qualidade gerados pela action
+relatorios/
