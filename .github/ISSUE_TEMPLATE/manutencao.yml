@@ -1,0 +1,110 @@
+name: Manutenção da automação de testes
+description: Registra uma falha ou demanda de manutenção da TAS, com classificação, prioridade, responsável e prazo.
+title: "[manutenção] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use este formulário para toda falha ou demanda de manutenção dos testes.
+        Depois de abrir, aplique as labels que batem com o tipo e a prioridade escolhidos (`falha:*`, `prioridade:*` e, se for o caso, `flaky`).
+        Critérios completos em `docs/tas.md`.
+
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo de falha
+      description: Resultado da investigação. Na dúvida entre SUT e TAS, reproduza o caso manualmente antes de classificar.
+      options:
+        - "SUT: o teste encontrou um defeito real no sistema (falha:sut)"
+        - "TAS: problema no próprio teste, como seletor, dado ou assert (falha:tas)"
+        - "Ambiente: runner, rede, banco ou dependência externa (falha:ambiente)"
+        - "Esperada: mudança intencional no sistema exige atualizar o teste (falha:esperada)"
+        - "Ainda em investigação"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options:
+        - "Alta: bloqueia a main ou o smoke, corrigir em até 1 dia útil (prioridade:alta)"
+        - "Média: afeta a regressão, corrigir em até 3 dias úteis (prioridade:media)"
+        - "Baixa: sem impacto imediato, tratar na próxima revisão periódica (prioridade:baixa)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: flaky
+    attributes:
+      label: O teste é instável?
+      description: Passa e falha sem mudança de código. Se sim, aplique a label flaky e marque o teste com @flaky para quarentena.
+      options:
+        - "Não"
+        - "Sim"
+        - "Não sei ainda"
+    validations:
+      required: true
+
+  - type: input
+    id: teste
+    attributes:
+      label: Teste afetado
+      description: Arquivo e nome do teste.
+      placeholder: "tests/e2e/login.spec.ts: login com senha inválida"
+    validations:
+      required: true
+
+
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que aconteceu
+      description: Link do run no GitHub Actions ou da issue falha-pipeline, erro, trecho do log e o que se esperava.
+    validations:
+      required: true
+
+  - type: textarea
+    id: investigacao
+    attributes:
+      label: Investigação
+      description: "O que foi verificado para chegar ao tipo de falha, por exemplo: reproduziu localmente, rodou de novo, conferiu mudança recente no sistema."
+    validations:
+      required: true
+
+  - type: input
+    id: responsavel
+    attributes:
+      label: Responsável
+      description: Quem vai tratar. Também atribua a pessoa em Assignees.
+      placeholder: "@usuario"
+    validations:
+      required: true
+
+  - type: input
+    id: prazo
+    attributes:
+      label: Prazo
+      description: Data limite, conforme a prioridade.
+      placeholder: "DD/MM/AAAA"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: encaminhamento
+    attributes:
+      label: Encaminhamento
+      options:
+        - "Corrigir o teste"
+        - "Abrir bug para o sistema"
+        - "Corrigir o ambiente ou a pipeline"
+        - "Pôr em quarentena (@flaky) até corrigir"
+        - "Propor remoção do teste (justificar abaixo)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: justificativa
+    attributes:
+      label: Justificativa e riscos
+      description: "Obrigatório em quarentena ou remoção (o formulário não consegue exigir isso sozinho, quem revisa a issue confere). Diga o motivo, quem decidiu e qual risco fica sem cobertura."
