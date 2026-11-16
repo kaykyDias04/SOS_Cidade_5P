@@ -1,0 +1,10 @@
+/* NativeWind global styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Remove black focus/selection box on Web while keeping the blinking text cursor */
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}

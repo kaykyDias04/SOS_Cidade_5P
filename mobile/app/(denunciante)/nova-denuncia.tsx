@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -15,8 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
-import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
@@ -91,13 +90,6 @@ export default function NovaDenunciaScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [showCamera, setShowCamera] = useState(false);
-  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const cameraRef = useRef<CameraView>(null);
-
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [gettingLocation, setGettingLocation] = useState(false);
-
   const validate = () => {
     const e: Record<string, string> = {};
     if (!tipoDenuncia) e.tipo = 'Selecione um tipo';
@@ -107,54 +99,29 @@ export default function NovaDenunciaScreen() {
     return Object.keys(e).length === 0;
   };
 
-  const openCamera = async () => {
+  const pickImage = async () => {
     if (imagens.length >= 4) {
       Toast.show({ type: 'info', text1: 'Limite atingido', text2: 'Máximo de 4 imagens por denúncia.' });
       return;
     }
-    if (!cameraPermission?.granted) {
-      const perm = await requestCameraPermission();
-      if (!perm.granted) {
-        Alert.alert('Permissão negada', 'Permita o acesso à câmera para registrar a ocorrência.');
-        return;
-      }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão negada', 'Permita o acesso à galeria.');
+      return;
     }
-    setShowCamera(true);
-  };
-
-  const takePhoto = async () => {
-    if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync({ quality: 0.5, base64: true });
-    if (photo?.base64) {
-      setImagens((prev) => [...prev, `data:image/jpeg;base64,${photo.base64}`]);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      base64: true,
+      allowsMultipleSelection: false,
+    });
+    if (!result.canceled && result.assets[0].base64) {
+      setImagens((prev) => [...prev, `data:image/jpeg;base64,${result.assets[0].base64}`]);
     }
-    setShowCamera(false);
   };
 
   const removeImage = (idx: number) => {
     setImagens((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const getLocation = async () => {
-    setGettingLocation(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'Permita o acesso à localização para anexar o GPS da ocorrência.');
-        return;
-      }
-      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setCoords({ latitude: position.coords.latitude, longitude: position.coords.longitude });
-      const addresses = await Location.reverseGeocodeAsync(position.coords);
-      const address = addresses[0];
-      const bairroEncontrado = address?.district || address?.subregion || address?.city;
-      if (bairroEncontrado) setBairro(bairroEncontrado);
-      Toast.show({ type: 'success', text1: 'Localização capturada' });
-    } catch {
-      Toast.show({ type: 'error', text1: 'Não foi possível obter sua localização' });
-    } finally {
-      setGettingLocation(false);
-    }
   };
 
   const handleSubmit = async () => {
@@ -183,7 +150,6 @@ export default function NovaDenunciaScreen() {
         setDescricao('');
         setImagens([]);
         setIdentificacao(true);
-        setCoords(null);
       } else {
         Toast.show({ type: 'error', text1: 'Erro', text2: 'Não foi possível registrar a denúncia.' });
       }
@@ -237,29 +203,6 @@ export default function NovaDenunciaScreen() {
               <Ionicons name="chevron-down" size={18} color="#9ca3af" />
             </TouchableOpacity>
             {!!errors.bairro && <Text style={styles.errorText}>{errors.bairro}</Text>}
-          </View>
-
-
-          <View style={styles.field}>
-            <Text style={styles.label}>Localização GPS (opcional)</Text>
-            <TouchableOpacity
-              style={styles.select}
-              onPress={getLocation}
-              disabled={gettingLocation}
-              accessibilityLabel="Capturar localização GPS"
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="navigate-outline" size={18} color="#6498c9" />
-                <Text style={coords ? styles.selectText : styles.placeholder}>
-                  {gettingLocation
-                    ? 'Obtendo localização...'
-                    : coords
-                    ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
-                    : 'Anexar minha localização atual'}
-                </Text>
-              </View>
-              {gettingLocation ? <ActivityIndicator size="small" /> : <Ionicons name="chevron-forward" size={18} color="#9ca3af" />}
-            </TouchableOpacity>
           </View>
 
 
@@ -327,7 +270,7 @@ export default function NovaDenunciaScreen() {
                 </View>
               ))}
               {imagens.length < 4 && (
-                <TouchableOpacity style={styles.addImageBtn} onPress={openCamera} accessibilityLabel="Tirar foto">
+                <TouchableOpacity style={styles.addImageBtn} onPress={pickImage} accessibilityLabel="Adicionar imagem">
                   <Ionicons name="camera-outline" size={28} color="#6498c9" />
                   <Text style={styles.addImageText}>Adicionar</Text>
                 </TouchableOpacity>
@@ -435,31 +378,6 @@ export default function NovaDenunciaScreen() {
           </View>
         </View>
       </Modal>
-      <Modal visible={showCamera} animationType="slide">
-        <View style={{ flex: 1, backgroundColor: '#000' }}>
-          <CameraView ref={cameraRef} style={{ flex: 1 }} facing={'back' as CameraType}>
-            <SafeAreaView style={styles.cameraOverlay}>
-              <TouchableOpacity
-                style={styles.cameraCloseBtn}
-                onPress={() => setShowCamera(false)}
-                accessibilityLabel="Fechar câmera"
-              >
-                <Ionicons name="close" size={28} color="#fff" />
-              </TouchableOpacity>
-              <View style={styles.cameraControls}>
-                <TouchableOpacity
-                  style={styles.cameraShutterBtn}
-                  onPress={takePhoto}
-                  accessibilityLabel="Tirar foto"
-                >
-                  <View style={styles.cameraShutterInner} />
-                </TouchableOpacity>
-              </View>
-            </SafeAreaView>
-          </CameraView>
-        </View>
-      </Modal>
-
     </SafeAreaView>
   );
 }
@@ -570,16 +488,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successBtnText: { color: '#fff', fontWeight: '800', fontSize: 15 },
-
-  cameraOverlay: { flex: 1, justifyContent: 'space-between' },
-  cameraCloseBtn: {
-    margin: 16, width: 44, height: 44, borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
-  },
-  cameraControls: { alignItems: 'center', paddingBottom: 32 },
-  cameraShutterBtn: {
-    width: 76, height: 76, borderRadius: 38, borderWidth: 4, borderColor: '#fff',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  cameraShutterInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#fff' },
 });

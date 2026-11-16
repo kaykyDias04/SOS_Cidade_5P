@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { denunciasAPI, Denuncia, PaginatedResponse } from '@/lib/api';
+import { denunciasAPI, Denuncia, DenunciaFiltros, PaginatedResponse } from '@/lib/api';
+import { notificarMudancaStatus } from '@/lib/notifications';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface DenunciasState {
   denuncias: Denuncia[];
@@ -8,7 +10,11 @@ interface DenunciasState {
   page: number;
   limit: number;
   total?: number;
+  filtros: DenunciaFiltros;
+  opcoes: { tipos: string[]; bairros: string[] };
 
+  setFiltros: (filtros: DenunciaFiltros) => void;
+  limparFiltros: () => void;
   setPage: (page: number) => void;
   fetchDenuncias: () => Promise<void>;
   createDenuncia: (data: Omit<Denuncia, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Denuncia | null>;
@@ -25,6 +31,18 @@ export const useDenunciasStore = create<DenunciasState>((set, get) => ({
   page: 1,
   limit: 50,
   total: undefined,
+  filtros: {},
+  opcoes: { tipos: [], bairros: [] },
+
+  setFiltros: (novos) => {
+    set((state) => ({ filtros: { ...state.filtros, ...novos }, page: 1 }));
+    get().fetchDenuncias();
+  },
+
+  limparFiltros: () => {
+    set({ filtros: {}, page: 1 });
+    get().fetchDenuncias();
+  },
 
   setPage: (page) => {
     set({ page });
@@ -34,10 +52,10 @@ export const useDenunciasStore = create<DenunciasState>((set, get) => ({
   clearError: () => set({ error: null }),
 
   fetchDenuncias: async () => {
-    const { page, limit } = get();
+    const { page, limit, filtros } = get();
     set({ loading: true, error: null });
     try {
-      const response = await denunciasAPI.list(page, limit);
+      const response = await denunciasAPI.list(page, limit, filtros);
 
       if (response.success && response.data) {
         const paginatedData = response.data as PaginatedResponse<Denuncia>;
@@ -45,8 +63,28 @@ export const useDenunciasStore = create<DenunciasState>((set, get) => ({
           ? paginatedData
           : (paginatedData.data || []);
 
+        // notifica o usuário quando a situação de uma denúncia dele mudou
+        const anteriores = new Map(get().denuncias.map((d) => [d.id, d.situacao]));
+        const meuId = useAuthStore.getState().user?.id;
+        if (anteriores.size > 0 && meuId !== undefined) {
+          items.forEach((d) => {
+            const antes = anteriores.get(d.id);
+            if (antes && antes !== d.situacao && d.userId === meuId) {
+              notificarMudancaStatus(d.protocolo, d.tipoDenuncia, d.situacao);
+            }
+          });
+        }
+
+        const opcoes = get().opcoes;
+        const unir = (a: string[], b: string[]) =>
+          Array.from(new Set([...a, ...b.filter(Boolean)])).sort();
+
         set({
           denuncias: items,
+          opcoes: {
+            tipos: unir(opcoes.tipos, items.map((d) => d.tipoDenuncia)),
+            bairros: unir(opcoes.bairros, items.map((d) => d.bairroOcorrencia)),
+          },
           loading: false,
           total: !Array.isArray(paginatedData) && paginatedData.meta ? paginatedData.meta.total : undefined,
         });

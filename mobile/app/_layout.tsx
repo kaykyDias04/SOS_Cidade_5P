@@ -1,29 +1,14 @@
-import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useEffect } from 'react';
+import { registrarNotificacoes } from '@/lib/notifications';
 import '../global.css';
 
 export default function RootLayout() {
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = useAuthStore.persist.onFinishHydration(() => setIsHydrated(true));
-    if (useAuthStore.persist.hasHydrated()) setIsHydrated(true);
-    return unsubscribe;
-  }, []);
-
-  if (!isHydrated) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  useEffect(() => { registrarNotificacoes(); }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -32,6 +17,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(public)" />
           <Stack.Screen name="(denunciante)" />
+          <Stack.Screen name="(gestor)" />
         </Stack>
         <Toast />
       </SafeAreaProvider>
