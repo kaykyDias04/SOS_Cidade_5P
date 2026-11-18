@@ -97,11 +97,20 @@ export interface Denuncia {
   updatedAt: string;
 }
 
+export interface DenunciaFiltros {
+  tipoDenuncia?: string;
+  bairroOcorrencia?: string;
+  situacao?: string;
+}
+
 export const denunciasAPI = {
-  list: async (page = 1, limit = 50) => {
-    return apiCall<PaginatedResponse<Denuncia>>(
-      `/denuncias/minhas?_page=${page}&_limit=${limit}&_meta=1`
-    );
+  list: async (page = 1, limit = 50, filtros: DenunciaFiltros = {}) => {
+    const params = new URLSearchParams({ _page: String(page), _limit: String(limit), _meta: '1' });
+    (Object.keys(filtros) as (keyof DenunciaFiltros)[]).forEach((k) => {
+      const v = filtros[k];
+      if (v) params.append(k, v);
+    });
+    return apiCall<PaginatedResponse<Denuncia>>(`/denuncias?${params.toString()}`);
   },
 
   getById: async (id: number) => {

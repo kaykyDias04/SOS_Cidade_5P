@@ -32,6 +32,10 @@
         "android.permission.CAMERA"
       ]
     },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
     "plugins": [
       "expo-router",
       [
@@ -42,9 +46,22 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "S.O.S Cidade precisa de acesso às suas fotos para anexar imagens às denúncias.",
+          "cameraPermission": "S.O.S Cidade precisa da câmera para fotografar a ocorrência."
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "S.O.S Cidade usa a câmera para fotografar ocorrências."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#1669BB"
         }
       ]
     ],
