@@ -7,7 +7,7 @@
     "test:unit": "npm run test:unit:frontend && npm run test:unit:backend",
     "test:unit:frontend": "node -e \"require('fs').mkdirSync('resultados',{recursive:true})\" && node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=resultados/unit-frontend.xml \"frontend/tests/*.test.mjs\"",
     "test:unit:backend": "npm --prefix backend run test:unit",
-    "test:api": "npm --prefix tests test",
+    "test:api": "npm --prefix tests run test:coverage",
     "test:e2e": "npm --prefix e2e test",
     "test:e2e:smoke": "npm --prefix e2e test -- --grep @smoke",
     "test:verbose": "npm --prefix tests run test:verbose"
