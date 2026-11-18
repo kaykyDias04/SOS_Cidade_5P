@@ -13,7 +13,7 @@ module.exports = {
   clearMocks: true,
   // Além da saída no terminal, grava o resultado em JUnit XML para a pipeline
   // (artefato e cálculo de métricas). Contrato: resultados/unit-backend.xml na raiz.
-  reporters: [docs
+  reporters: [
     'default',
     path.resolve(__dirname, '../scripts/test-management/jest-reporter.cjs'),
     [
