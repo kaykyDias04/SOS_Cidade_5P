@@ -2,6 +2,7 @@ const path = require('path');
 
 module.exports = {
   testEnvironment: 'node',
+  testNamePattern: process.env.TEST_MODE === 'quarantine' ? '(?:^|\\s)@flaky(?:\\s|$)' : '^(?!.*(?:^|\\s)@flaky(?:\\s|$)).*$',
   testMatch: ['<rootDir>/**/*.test.ts'],
   setupFiles: ['<rootDir>/setup.ts'],
   transform: {
@@ -16,17 +17,17 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   verbose: true,
   testTimeout: 10000,
-  forceExit: true,
   clearMocks: true,
   // Além da saída no terminal, grava o resultado em JUnit XML para a pipeline
   // (artefato e cálculo de métricas). Contrato: resultados/api.xml na raiz.
   // O jest-junit fica no node_modules do backend, como o ts-jest acima.
   reporters: [
     'default',
+    path.resolve(__dirname, '../scripts/test-management/jest-reporter.cjs'),
     [
       path.resolve(__dirname, '../backend/node_modules/jest-junit'),
       {
-        outputDirectory: path.resolve(__dirname, '../resultados'),
+        outputDirectory: process.env.TEST_MODE === 'quarantine' ? process.env.TEST_REPORT_DIR : path.resolve(__dirname, '../resultados'),
         outputName: 'api.xml',
         suiteName: 'api',
         addFileAttribute: 'true',

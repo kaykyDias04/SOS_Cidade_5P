@@ -1,0 +1,130 @@
+{
+  "quarantineRetries": 2,
+  "diagnosticRuns": 3,
+  "review": {
+    "minimumSamples": 3,
+    "failureRate": 0.05,
+    "averageMs": 1000,
+    "maximumMs": 10000,
+    "quarantineDays": 14,
+    "unmaintainedDays": 90,
+    "duplicateLines": 8,
+    "exitConsecutivePasses": 10,
+    "evidenceMaxAgeHours": 24
+  },
+  "criticalIds": [
+    "CT-AUT-01",
+    "CT-AUT-02",
+    "CT-AUT-12",
+    "CT-DEN-01",
+    "CT-DEN-02",
+    "CT-DEN-04",
+    "CT-DEN-08",
+    "CT-DEN-11",
+    "CT-DEN-14",
+    "CT-DEN-16",
+    "CT-DEN-18",
+    "CT-DEN-19",
+    "CT-DEN-20",
+    "UN-PERFIL-01",
+    "UN-PERFIL-02",
+    "UN-PERFIL-03",
+    "UN-PERFIL-04",
+    "UN-DENUNCIA-01",
+    "UN-DENUNCIA-02",
+    "UN-DENUNCIA-05",
+    "CT-AUT-03",
+    "CT-AUT-04",
+    "CT-AUT-05",
+    "CT-AUT-06",
+    "CT-AUT-07",
+    "CT-AUT-08",
+    "CT-AUT-09",
+    "CT-AUT-10",
+    "CT-AUT-11",
+    "CT-USR-02",
+    "CT-USR-10",
+    "CT-USR-11",
+    "CT-USR-12",
+    "UN-SESSAO-01",
+    "UN-SESSAO-02",
+    "UN-SESSAO-03",
+    "UN-SESSAO-04",
+    "UN-SESSAO-05",
+    "CT-DEN-12",
+    "CT-USR-01",
+    "CT-USR-03",
+    "CT-USR-04",
+    "CT-USR-05",
+    "CT-USR-06",
+    "CT-USR-07",
+    "CT-USR-08",
+    "CT-USR-09",
+    "CT-DEN-03",
+    "CT-DEN-05",
+    "CT-DEN-06",
+    "CT-DEN-07",
+    "CT-DEN-09",
+    "CT-DEN-10",
+    "CT-DEN-13",
+    "CT-DEN-15",
+    "CT-DEN-17",
+    "UN-CRIPTO-01",
+    "UN-CRIPTO-02",
+    "UN-CRIPTO-03",
+    "UN-CRIPTO-04",
+    "UN-CRIPTO-05",
+    "UN-CRIPTO-06",
+    "UN-CRIPTO-07",
+    "UN-DENUNCIA-03",
+    "UN-DENUNCIA-04",
+    "UN-USUARIO-01",
+    "UN-USUARIO-02",
+    "UN-USUARIO-03",
+    "UN-USUARIO-04",
+    "UN-USUARIO-05",
+    "ATDD-01",
+    "ATDD-02",
+    "BDD-01",
+    "BDD-02",
+    "TDD-01a",
+    "TDD-01b",
+    "TDD-02a",
+    "TDD-02b"
+  ],
+  "criticalFiles": [
+    "e2e/tests/fluxo-denuncia-cidadao.spec.ts",
+    "e2e/tests/gestor-fluxo.spec.ts",
+    "e2e/tests/denunciante-fluxo-completo.spec.ts"
+  ],
+  "criticalTests": [
+    {
+      "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
+      "title": "deve permitir cadastrar uma nova conta de cidadão"
+    },
+    {
+      "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
+      "title": "deve logar com a conta recém-criada e cair na home do denunciante"
+    },
+    {
+      "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
+      "title": "não deve logar com senha incorreta (caminho negativo)"
+    },
+    {
+      "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
+      "title": "deve registrar uma nova denúncia e vê-la em \"Minhas Denúncias\""
+    },
+    {
+      "file": "e2e/tests/fluxo-denuncia-cidadao.spec.ts",
+      "title": "cidadão se cadastra, registra uma denúncia e a encontra em Minhas Denúncias @smoke"
+    },
+    {
+      "file": "e2e/tests/gestor-fluxo.spec.ts",
+      "title": "deve logar como gestor e acessar o Dashboard Interativo @smoke"
+    },
+    {
+      "file": "e2e/tests/gestor-fluxo.spec.ts",
+      "title": "denunciante comum não deve conseguir acessar rota do gestor @smoke"
+    }
+  ]
+}

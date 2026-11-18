@@ -1,5 +1,7 @@
 # Solução de automação de testes (TAS) do S.O.S Cidade
 
+O tópico **2. Gestão dos testes** está implementado em [gestão dos testes](testes/gestao-testes.md): identificação de instabilidade, quarentena `@flaky`, revisão semanal/por sprint e política de remoção com aprovação. A seção abaixo continua definindo a triagem de manutenção.
+
 Este documento registra como a equipe mantém os testes automatizados do S.O.S Cidade. As decisões seguem o Capítulo 13 do material de estudo e o contexto do projeto.
 
 ## 1. Política de manutenção
