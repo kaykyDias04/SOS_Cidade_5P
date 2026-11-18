@@ -1,14 +1,12 @@
 import { Tabs, Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
 
 export default function GestorLayout() {
-  const { isAuthenticated, user } = useAuthStore();
+  const redirect = useRoleGuard('GESTOR');
   const insets = useSafeAreaInsets();
-
-  if (!isAuthenticated) return <Redirect href="/login" />;
-  if (user?.role === 'DENUNCIANTE') return <Redirect href="/home" />;
+  if (redirect) return <Redirect href={redirect} />;
 
   return (
     <Tabs

@@ -27,18 +27,18 @@ if (Platform.OS === 'web') {
 
   try {
     const SecureStore = require('expo-secure-store');
-    SecureStore.getItemAsync = async (key) => {
+    SecureStore.getItemAsync = async (key: string) => {
       if (typeof window !== 'undefined' && window.localStorage) {
         return window.localStorage.getItem(key);
       }
       return null;
     };
-    SecureStore.setItemAsync = async (key, value) => {
+    SecureStore.setItemAsync = async (key: string, value: string) => {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem(key, value);
       }
     };
-    SecureStore.deleteItemAsync = async (key) => {
+    SecureStore.deleteItemAsync = async (key: string) => {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.removeItem(key);
       }

@@ -2,14 +2,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { authAPI } from '@/lib/api';
+import { authAPI } from '@/services/authService';
+import type { AuthUser } from '@/types';
 
-export interface AuthUser {
-  name: string;
-  role: 'DENUNCIANTE' | 'GESTOR';
-  email?: string;
-  id?: number;
-}
+export type { AuthUser } from '@/types';
 
 interface AuthState {
   user: AuthUser | null;

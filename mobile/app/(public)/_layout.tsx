@@ -1,16 +1,9 @@
 import { Stack, Redirect } from 'expo-router';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
 
 export default function PublicLayout() {
-  const { isAuthenticated, user } = useAuthStore();
-
-
-  if (isAuthenticated && user) {
-    if (user.role === 'GESTOR') {
-      return <Redirect href="/denuncias" />;
-    }
-    return <Redirect href="/home" />;
-  }
+  const redirect = useRoleGuard(null);
+  if (redirect) return <Redirect href={redirect} />;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

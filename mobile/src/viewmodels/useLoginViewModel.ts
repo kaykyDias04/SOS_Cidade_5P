@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AuthService } from '../services/authService';
-import { User } from '../models/User';
+import type { User } from '@/types';
 
 /**
  * ViewModel: guarda o ESTADO da tela de login (o que está nos campos,
@@ -26,8 +26,8 @@ export function useLoginViewModel(onLoginSuccess: (user: User) => void) {
     try {
       const session = await AuthService.login(email, password);
       onLoginSuccess(session.user);
-    } catch (error: any) {
-      setErrorMessage(error.message || 'E-mail ou senha incorretos.');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'E-mail ou senha incorretos.');
     } finally {
       setLoading(false);
     }

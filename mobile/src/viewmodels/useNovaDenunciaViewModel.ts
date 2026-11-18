@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DenunciaService } from '../services/denunciaService';
-import { Denuncia } from '../models/Denuncia';
+import type { Denuncia } from '@/types';
 
 export function useNovaDenunciaViewModel(onSucesso: (denuncia: Denuncia) => void) {
   const [tipoDenuncia, setTipoDenuncia] = useState('');
@@ -33,8 +33,8 @@ export function useNovaDenunciaViewModel(onSucesso: (denuncia: Denuncia) => void
         nomeDenunciante: identificacao ? nomeDenunciante : undefined,
       });
       onSucesso(denuncia);
-    } catch (error: any) {
-      setErrorMessage(error.message || 'Não foi possível enviar a denúncia.');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Não foi possível enviar a denúncia.');
     } finally {
       setLoading(false);
     }

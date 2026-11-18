@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '../screens/LoginScreen';
 import { NovaDenunciaScreen } from '../screens/NovaDenunciaScreen';
-import { User } from '../models/User';
+import type { User } from '@/types';
 
 export type RootStackParamList = {
   Login: undefined;

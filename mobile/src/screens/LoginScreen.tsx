@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLoginViewModel } from '../viewmodels/useLoginViewModel';
-import { User } from '../models/User';
+import type { User } from '@/types';
 
 interface Props {
   onLoginSuccess: (user: User) => void;

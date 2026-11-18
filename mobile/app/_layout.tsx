@@ -4,7 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
 import { useEffect } from 'react';
-import { registrarNotificacoes } from '@/lib/notifications';
+import { registrarNotificacoes } from '@/services/notifications';
 import '../global.css';
 
 export default function RootLayout() {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Switch, ScrollView } from 'react-native';
 import { useNovaDenunciaViewModel } from '../viewmodels/useNovaDenunciaViewModel';
-import { Denuncia } from '../models/Denuncia';
+import type { Denuncia } from '@/types';
 
 interface Props {
   onSucesso: (denuncia: Denuncia) => void;

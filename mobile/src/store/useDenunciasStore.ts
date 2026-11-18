@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import { denunciasAPI, Denuncia, DenunciaFiltros, PaginatedResponse } from '@/lib/api';
-import { notificarMudancaStatus } from '@/lib/notifications';
+import { denunciasAPI } from '@/services/denunciaService';
+import { notificarMudancaStatus } from '@/services/notifications';
 import { useAuthStore } from '@/store/useAuthStore';
+import type { Denuncia, DenunciaFiltros, PaginatedResponse } from '@/types';
 
 interface DenunciasState {
   denuncias: Denuncia[];
