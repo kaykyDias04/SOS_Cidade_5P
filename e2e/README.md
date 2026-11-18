@@ -7,6 +7,7 @@ pelo navegador: cadastro, login, criação de denúncia e verificação na lista
 
 | Arquivo | O que testa |
 |---|---|
+| `tests/fluxo-denuncia-cidadao.spec.ts` | Jornada autocontida do cidadão: cadastro, login, denúncia e histórico (`@smoke`) |
 | `tests/denunciante-fluxo-completo.spec.ts` | Cadastro de conta, login, login com senha errada (caminho negativo), criação de denúncia e conferência em "Minhas Denúncias" |
 | `tests/gestor-fluxo.spec.ts` | Login como gestor e acesso ao Dashboard; teste de controle de acesso (denunciante tentando ver a área do gestor) |
 
@@ -16,18 +17,20 @@ A aplicação precisa estar rodando localmente **antes** de executar os testes.
 Na raiz do projeto principal (não desta pasta de testes):
 
 ```bash
-docker compose up -d
+# Roteiro completo e isolado de QA:
+# docs/testes/gestao-testes.md → "Pendências para o responsável pelos testes E2E"
 ```
 
-Isso sobe banco (5432), Redis (6379), backend (8000, http://localhost:8000) e
-frontend (3000, http://localhost:3000) — confira o `README.md` do projeto principal.
+O roteiro prepara PostgreSQL e Redis exclusivos para QA (portas 15432/16379),
+backend em 8000 e frontend em 3000. Inclui chaves de teste, migrations e seed.
+O `docker-compose.yml` principal é de desenvolvimento; não usar seus dados como massa descartável.
 
 ## Instalação e execução
 
 Dentro desta pasta:
 
 ```bash
-npm install
+npm ci
 npx playwright install --with-deps chromium   # baixa o navegador usado nos testes
 npm test                                      # roda todos os testes, sem interface
 npm run test:headed                           # roda mostrando o navegador (bom pra apresentação)
@@ -41,21 +44,24 @@ O cadastro → login → nova denúncia → aparecer na listagem é o **caminho 
 do sistema: se ele quebrar, nenhuma outra tela (dashboard, mapa) tem dado pra
 mostrar. Por isso ele foi priorizado como o cenário principal de E2E.
 
-O teste de "denunciante tentando acessar o Dashboard do gestor" foi incluído
-porque, na análise de segurança do projeto, identificamos que essa verificação
-de perfil (role) ainda não existe no backend — o teste documenta esse
-comportamento de forma automatizada, e passa a falhar sozinho no dia em que
-essa proteção for implementada corretamente (o que é o resultado esperado).
+O teste de "denunciante tentando acessar o Dashboard do gestor" verifica a proteção
+de perfil já implementada. O esperado é redirecionamento para a área do cidadão,
+sem exibir o dashboard administrativo. A autorização da API também possui testes próprios.
 
 ## Observação sobre dados de teste
 
-Não existe script de seed no projeto, então:
+Existe seed em `backend/prisma/seed.ts`, executado pelo workflow antes da suíte:
 - O teste do denunciante cria uma conta nova a cada execução (e-mail com timestamp), para não colidir com execuções anteriores.
-- O teste do gestor cria a conta de gestor direto pela API antes do teste, porque a tela pública de cadastro só permite criar contas de denunciante (por design).
+- O teste do gestor usa `gestor1.teste@soscidade.com`, criado pelo seed. O cadastro público não permite criar GESTOR.
+
+São 7 cenários em 3 arquivos; os 3 `@smoke` são subconjunto desses 7. A jornada modular
+é serial e os casos posteriores dependem do cadastro inicial. Nenhum deles pode entrar
+em quarentena. A execução real e a publicação posterior dos workflows são responsabilidade
+do integrante designado; esta entrega da gestão de testes não afirma aprovação E2E local.
 
 ## Limitação conhecida
 
 Os testes assumem banco de dados "vivo" entre execuções (sem reset automático).
 Rodar os testes várias vezes vai acumular usuários e denúncias de teste no banco
-local — isso é aceitável para o ambiente de desenvolvimento, mas não deveria
-apontar para um ambiente de produção.
+isolado de QA. Isso é aceitável exclusivamente nessa massa descartável; nunca
+apontar os testes para produção nem para um banco compartilhado de desenvolvimento.

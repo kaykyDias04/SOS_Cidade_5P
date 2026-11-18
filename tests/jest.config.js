@@ -6,6 +6,7 @@ module.exports = {
   rootDir: path.resolve(__dirname, '..'),
   roots: ['<rootDir>/tests', '<rootDir>/backend/src'],
   testEnvironment: 'node',
+  testNamePattern: process.env.TEST_MODE === 'quarantine' ? '(?:^|\\s)@flaky(?:\\s|$)' : '^(?!.*(?:^|\\s)@flaky(?:\\s|$)).*$',
   testMatch: ['<rootDir>/tests/**/*.test.ts'],
   setupFiles: ['<rootDir>/tests/setup.ts'],
   transform: {
@@ -20,7 +21,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   verbose: true,
   testTimeout: 10000,
-  forceExit: true,
   clearMocks: true,
   // Cobertura do código do backend exercitado pelos testes de API (só liga com --coverage,
   // ou seja, com `npm run test:coverage`). Vai para resultados/cobertura/, que a pipeline
@@ -34,10 +34,11 @@ module.exports = {
   // O jest-junit fica no node_modules do backend, como o ts-jest acima.
   reporters: [
     'default',
+    path.resolve(__dirname, '../scripts/test-management/jest-reporter.cjs'),
     [
       path.resolve(__dirname, '../backend/node_modules/jest-junit'),
       {
-        outputDirectory: path.resolve(__dirname, '../resultados'),
+        outputDirectory: process.env.TEST_MODE === 'quarantine' ? process.env.TEST_REPORT_DIR : path.resolve(__dirname, '../resultados'),
         outputName: 'api.xml',
         suiteName: 'api',
         addFileAttribute: 'true',
