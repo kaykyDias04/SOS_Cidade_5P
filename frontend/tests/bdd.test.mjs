@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { validateLoginForm, validateDenunciaForm } from '../src/lib/validation.mjs';
 
 // BDD-01: Login com credenciais válidas como Denunciante
-describe('BDD-01: Login como Denunciante', () => {
-  it('deve retornar sem erros para credenciais válidas', () => {
+describe('Login como Denunciante', () => {
+  it('BDD-01: deve retornar sem erros para credenciais válidas', () => {
     // Given
     const credentials = { email: 'levi@sos.com', password: '123456' };
     // When
@@ -15,8 +15,8 @@ describe('BDD-01: Login como Denunciante', () => {
 });
 
 // BDD-02: Envio de formulário com campos obrigatórios vazios
-describe('BDD-02: Formulário de nova denúncia com campos vazios', () => {
-  it('deve retornar 4 erros ao enviar formulário vazio', () => {
+describe('Formulário de nova denúncia com campos vazios', () => {
+  it('BDD-02: deve retornar 4 erros ao enviar formulário vazio', () => {
     // Given
     const form = { tipoDenuncia: '', bairro: '', descricao: '', consentimento: false };
     // When
