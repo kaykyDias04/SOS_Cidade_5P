@@ -13,17 +13,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Logo from '@/components/Logo';
+import { getTipoIcon, TIPOS_DENUNCIA } from '@/constants';
 
 const { width } = Dimensions.get('window');
-
-const CATEGORIAS = [
-  { title: 'Foco de Dengue', icon: 'bug-outline' as const },
-  { title: 'Iluminação Pública', icon: 'bulb-outline' as const },
-  { title: "Falta D'água", icon: 'water-outline' as const },
-  { title: 'Alagamento', icon: 'thunderstorm-outline' as const },
-  { title: 'Descarte Irregular de Lixo', icon: 'trash-outline' as const },
-  { title: 'Buraco na Via', icon: 'warning-outline' as const },
-];
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -101,17 +93,17 @@ export default function WelcomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>O que você pode denunciar</Text>
           <View style={styles.grid}>
-            {CATEGORIAS.map((cat, idx) => (
+            {TIPOS_DENUNCIA.filter((tipo) => tipo.label !== 'Outro').map((cat, idx) => (
               <TouchableOpacity
                 key={idx}
                 style={styles.categoryCard}
                 onPress={() => router.push('/login')}
-                accessibilityLabel={cat.title}
+                accessibilityLabel={cat.label}
               >
                 <View style={styles.categoryIcon}>
-                  <Ionicons name={cat.icon} size={28} color="#6498c9" />
+                  <Ionicons name={getTipoIcon(cat.label)} size={28} color="#6498c9" />
                 </View>
-                <Text style={styles.categoryTitle}>{cat.title}</Text>
+                <Text style={styles.categoryTitle}>{cat.label}</Text>
               </TouchableOpacity>
             ))}
           </View>

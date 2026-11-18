@@ -12,13 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
-
-const SITUACAO_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  PENDENTE: { bg: '#FEF3C7', text: '#92400E', label: 'Pendente' },
-  EM_ANDAMENTO: { bg: '#DBEAFE', text: '#1E40AF', label: 'Em Andamento' },
-  RESOLVIDO: { bg: '#D1FAE5', text: '#065F46', label: 'Resolvido' },
-  REJEITADO: { bg: '#FEE2E2', text: '#991B1B', label: 'Rejeitado' },
-};
+import { normalizeSituacao, SITUACAO_CONFIG } from '@/constants';
 
 export default function HomeDenuncianteScreen() {
   const router = useRouter();
@@ -39,8 +33,7 @@ export default function HomeDenuncianteScreen() {
     router.replace('/');
   };
 
-  const getSituacao = (situacao: string) =>
-    SITUACAO_COLORS[situacao] || { bg: '#F3F4F6', text: '#374151', label: situacao };
+  const getSituacao = (situacao: string) => SITUACAO_CONFIG[normalizeSituacao(situacao)];
 
   return (
     <SafeAreaView style={styles.container}>

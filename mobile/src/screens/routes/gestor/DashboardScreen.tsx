@@ -11,25 +11,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
+import {
+  normalizeSituacao,
+  SITUACAO_CONFIG,
+  SITUACAO_FINALIZADA,
+  SITUACAO_INICIAL,
+} from '@/constants';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 const { width } = Dimensions.get('window');
-
-const SITUACAO_COLORS: Record<string, string> = {
-  EM_ANDAMENTO: '#3B82F6',
-  RESOLVIDO: '#10B981',
-};
-
-const TIPO_ICONS: Record<string, string> = {
-  'Foco de Dengue': '🦟',
-  'Iluminação Pública': '💡',
-  "Falta D'água": '💧',
-  'Alagamento': '🌊',
-  'Descarte Irregular de Lixo': '🗑️',
-  'Buraco na Via': '⚠️',
-  'Outro': '📋',
-};
 
 function StatCard({ title, value, icon, color }: { title: string; value: number | string; icon: IconName; color: string }) {
   return (
@@ -91,14 +82,8 @@ export default function DashboardScreen() {
 
   const stats = useMemo(() => {
     const total = denuncias.length;
-    const emAndamento = denuncias.filter((d) => {
-      const s = d.situacao?.toLowerCase();
-      return s === 'em andamento' || s === 'em_andamento';
-    }).length;
-    const resolvidos = denuncias.filter((d) => {
-      const s = d.situacao?.toLowerCase();
-      return s === 'resolvido';
-    }).length;
+    const emAndamento = denuncias.filter((d) => normalizeSituacao(d.situacao) === SITUACAO_INICIAL).length;
+    const resolvidos = denuncias.filter((d) => normalizeSituacao(d.situacao) === SITUACAO_FINALIZADA).length;
 
     const porTipo = denuncias.reduce<Record<string, number>>((acc, d) => {
       acc[d.tipoDenuncia] = (acc[d.tipoDenuncia] || 0) + 1;
@@ -115,12 +100,12 @@ export default function DashboardScreen() {
       }));
 
     const situacaoData = [
-      { label: 'Em Andamento', value: emAndamento, color: SITUACAO_COLORS.EM_ANDAMENTO },
-      { label: 'Resolvido', value: resolvidos, color: SITUACAO_COLORS.RESOLVIDO },
+      { label: SITUACAO_CONFIG[SITUACAO_INICIAL].label, value: emAndamento, color: SITUACAO_CONFIG[SITUACAO_INICIAL].color },
+      { label: SITUACAO_CONFIG[SITUACAO_FINALIZADA].label, value: resolvidos, color: SITUACAO_CONFIG[SITUACAO_FINALIZADA].color },
     ];
 
     const duracoes = denuncias
-      .filter((d) => d.situacao?.toLowerCase() === 'resolvido' && d.createdAt && d.updatedAt)
+      .filter((d) => normalizeSituacao(d.situacao) === SITUACAO_FINALIZADA && d.createdAt && d.updatedAt)
       .map((d) => new Date(d.updatedAt).getTime() - new Date(d.createdAt).getTime())
       .filter((ms) => ms >= 0);
     const mediaHoras = duracoes.length
@@ -147,8 +132,8 @@ export default function DashboardScreen() {
 
         <View style={styles.statsGrid}>
           <StatCard title="Total" value={stats.total} icon="document-text-outline" color="#6498c9" />
-          <StatCard title="Em Andamento" value={stats.emAndamento} icon="refresh-outline" color="#3B82F6" />
-          <StatCard title="Resolvidos" value={stats.resolvidos} icon="checkmark-circle-outline" color="#10B981" />
+          <StatCard title="Em Andamento" value={stats.emAndamento} icon="refresh-outline" color={SITUACAO_CONFIG[SITUACAO_INICIAL].color} />
+          <StatCard title="Resolvidos" value={stats.resolvidos} icon="checkmark-circle-outline" color={SITUACAO_CONFIG[SITUACAO_FINALIZADA].color} />
           <StatCard title="Tempo médio" value={stats.tempoMedio} icon="time-outline" color="#F59E0B" />
         </View>
 

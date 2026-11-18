@@ -14,48 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
 import type { Denuncia } from '@/types';
-
-const BAIRRO_COORDS: Record<string, { latitude: number; longitude: number }> = {
-  'Boa Viagem': { latitude: -8.1192, longitude: -34.9011 },
-  'Recife Antigo': { latitude: -8.0628, longitude: -34.8711 },
-  'Casa Amarela': { latitude: -8.0242, longitude: -34.9202 },
-  'Aflitos': { latitude: -8.0492, longitude: -34.9002 },
-  'Graças': { latitude: -8.0532, longitude: -34.9042 },
-  'Espinheiro': { latitude: -8.0452, longitude: -34.9022 },
-  'Torre': { latitude: -8.0782, longitude: -34.9102 },
-  'Boa Vista': { latitude: -8.0648, longitude: -34.8831 },
-  'Água Fria': { latitude: -7.9972, longitude: -34.9202 },
-  'Várzea': { latitude: -8.0552, longitude: -34.9502 },
-};
-
-const DEFAULT_COORDS = { latitude: -8.0578, longitude: -34.9029 };
-
-const TIPO_COLORS: Record<string, string> = {
-  'Foco de Dengue': '#EF4444',
-  'Iluminação Pública': '#F59E0B',
-  "Falta D'água": '#3B82F6',
-  'Alagamento': '#6366F1',
-  'Descarte Irregular de Lixo': '#10B981',
-  'Buraco na Via': '#92400E',
-  'Outro': '#6b7280',
-};
-
-
-const SITUACAO_CONFIG: Record<string, { label: string; color: string }> = {
-  'Em Andamento': { label: 'Em Andamento', color: '#3B82F6' },
-  'Resolvido': { label: 'Resolvido', color: '#10B981' },
-};
-
-function getCoords(bairro: string) {
-  const key = Object.keys(BAIRRO_COORDS).find((b) =>
-    bairro?.toLowerCase().includes(b.toLowerCase())
-  );
-  if (key) return BAIRRO_COORDS[key];
-  return {
-    latitude: DEFAULT_COORDS.latitude + (Math.random() - 0.5) * 0.06,
-    longitude: DEFAULT_COORDS.longitude + (Math.random() - 0.5) * 0.06,
-  };
-}
+import {
+  DEFAULT_COORDS,
+  getCoords,
+  getTipoColor,
+  normalizeSituacao,
+  SITUACAO_CONFIG,
+  TIPOS_DENUNCIA,
+} from '@/constants';
 
 
 function WebMapFallback({ denuncias, onSelect }: { denuncias: Denuncia[]; onSelect: (d: Denuncia) => void }) {
@@ -84,8 +50,8 @@ function WebMapFallback({ denuncias, onSelect }: { denuncias: Denuncia[]; onSele
             </View>
           </View>
           {items.map((d) => {
-            const color = TIPO_COLORS[d.tipoDenuncia] || '#6b7280';
-            const sit = SITUACAO_CONFIG[d.situacao] || { label: d.situacao, color: '#6b7280' };
+            const color = getTipoColor(d.tipoDenuncia);
+            const sit = SITUACAO_CONFIG[normalizeSituacao(d.situacao)];
             return (
               <TouchableOpacity
                 key={d.id}
@@ -178,10 +144,10 @@ export default function MapaScreen() {
 
       {filtroTipo && (
         <View style={styles.filtroAtivo}>
-          <View style={[styles.filtroChip, { backgroundColor: (TIPO_COLORS[filtroTipo] || '#6498c9') + '22', borderColor: TIPO_COLORS[filtroTipo] || '#6498c9' }]}>
-            <Text style={[styles.filtroChipText, { color: TIPO_COLORS[filtroTipo] || '#6498c9' }]}>{filtroTipo}</Text>
+          <View style={[styles.filtroChip, { backgroundColor: `${getTipoColor(filtroTipo)}22`, borderColor: getTipoColor(filtroTipo) }]}>
+            <Text style={[styles.filtroChipText, { color: getTipoColor(filtroTipo) }]}>{filtroTipo}</Text>
             <TouchableOpacity onPress={() => setFiltroTipo(null)} accessibilityLabel="Remover filtro">
-              <Ionicons name="close-circle" size={16} color={TIPO_COLORS[filtroTipo] || '#6498c9'} />
+              <Ionicons name="close-circle" size={16} color={getTipoColor(filtroTipo)} />
             </TouchableOpacity>
           </View>
         </View>
@@ -213,7 +179,7 @@ export default function MapaScreen() {
           >
             {filtered.map((d) => {
               const coords = getCoords(d.bairroOcorrencia);
-              const color = TIPO_COLORS[d.tipoDenuncia] || '#6498c9';
+              const color = getTipoColor(d.tipoDenuncia);
               return (
                 <MapComponents.Marker
                   key={d.id}
@@ -236,7 +202,7 @@ export default function MapaScreen() {
 
           <View style={styles.legend}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-              {Object.entries(TIPO_COLORS).map(([tipo, color]) => (
+              {TIPOS_DENUNCIA.map(({ label: tipo, color }) => (
                 <View key={tipo} style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: color }]} />
                   <Text style={styles.legendText}>{tipo.split(' ').slice(0, 2).join(' ')}</Text>
@@ -260,16 +226,18 @@ export default function MapaScreen() {
               <View style={styles.sheetHandle} />
 
               <View style={styles.sheetHeader}>
-                <View style={[styles.tipoIndicator, { backgroundColor: (TIPO_COLORS[selectedDenuncia.tipoDenuncia] || '#6498c9') + '22' }]}>
-                  <Text style={styles.tipoEmoji}>{selectedDenuncia.tipoDenuncia.includes('Dengue') ? '🦟' : '📍'}</Text>
+                <View style={[styles.tipoIndicator, { backgroundColor: `${getTipoColor(selectedDenuncia.tipoDenuncia)}22` }]}>
+                  <Text style={styles.tipoEmoji}>
+                    {TIPOS_DENUNCIA.find((tipo) => tipo.label === selectedDenuncia.tipoDenuncia)?.emoji ?? '📍'}
+                  </Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sheetTipo}>{selectedDenuncia.tipoDenuncia}</Text>
                   <Text style={styles.sheetBairro}>{selectedDenuncia.bairroOcorrencia}</Text>
                 </View>
-                <View style={[styles.situacaoBadge, { backgroundColor: (SITUACAO_CONFIG[selectedDenuncia.situacao]?.color || '#6b7280') + '22' }]}>
-                  <Text style={[styles.situacaoText, { color: SITUACAO_CONFIG[selectedDenuncia.situacao]?.color || '#6b7280' }]}>
-                    {SITUACAO_CONFIG[selectedDenuncia.situacao]?.label || selectedDenuncia.situacao}
+                <View style={[styles.situacaoBadge, { backgroundColor: `${SITUACAO_CONFIG[normalizeSituacao(selectedDenuncia.situacao)].color}22` }]}>
+                  <Text style={[styles.situacaoText, { color: SITUACAO_CONFIG[normalizeSituacao(selectedDenuncia.situacao)].color }]}>
+                    {SITUACAO_CONFIG[normalizeSituacao(selectedDenuncia.situacao)].label}
                   </Text>
                 </View>
               </View>
@@ -318,7 +286,7 @@ export default function MapaScreen() {
                 onPress={() => { setFiltroTipo(tipo); setShowFiltros(false); }}
                 accessibilityLabel={tipo}
               >
-                <View style={[styles.typeDot, { backgroundColor: TIPO_COLORS[tipo] || '#6498c9' }]} />
+                <View style={[styles.typeDot, { backgroundColor: getTipoColor(tipo) }]} />
                 <Text style={[styles.filtroOptionText, filtroTipo === tipo && styles.filtroOptionTextActive]}>{tipo}</Text>
                 {filtroTipo === tipo && <Ionicons name="checkmark" size={18} color="#6498c9" />}
               </TouchableOpacity>

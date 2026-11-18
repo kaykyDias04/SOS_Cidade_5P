@@ -4,23 +4,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
+import { getTipoColor, normalizeSituacao, SITUACAO_CONFIG } from '@/constants';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
-
-const SITUACAO_CONFIG: Record<string, { bg: string; text: string; label: string; icon: IconName }> = {
-  'Em Andamento': { bg: '#DBEAFE', text: '#1E40AF', label: 'Em Andamento', icon: 'refresh-outline' },
-  'Resolvido': { bg: '#D1FAE5', text: '#065F46', label: 'Resolvido', icon: 'checkmark-circle-outline' },
-};
-
-const TIPO_COLORS: Record<string, string> = {
-  'Foco de Dengue': '#EF4444',
-  'Iluminação Pública': '#F59E0B',
-  "Falta D'água": '#3B82F6',
-  'Alagamento': '#6366F1',
-  'Descarte Irregular de Lixo': '#10B981',
-  'Buraco na Via': '#92400E',
-  'Outro': '#6b7280',
-};
 
 export default function DetalheDenunciaScreen() {
   const router = useRouter();
@@ -43,8 +29,8 @@ export default function DetalheDenunciaScreen() {
     );
   }
 
-  const sit = SITUACAO_CONFIG[denuncia.situacao] || { bg: '#F3F4F6', text: '#374151', label: denuncia.situacao, icon: 'help-outline' as IconName };
-  const cor = TIPO_COLORS[denuncia.tipoDenuncia] || '#6498c9';
+  const sit = SITUACAO_CONFIG[normalizeSituacao(denuncia.situacao)];
+  const cor = getTipoColor(denuncia.tipoDenuncia);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

@@ -19,59 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
-
-const TIPOS_DENUNCIA = [
-  'Foco de Dengue',
-  'Iluminação Pública',
-  "Falta D'água",
-  'Alagamento',
-  'Descarte Irregular de Lixo',
-  'Buraco na Via',
-  'Outro',
-];
-
-const BAIRROS_RECIFE = [
-  'Afogados',
-  'Água Fria',
-  'Arruda',
-  'Beberibe',
-  'Boa Viagem',
-  'Boa Vista',
-  'Brasília Teimosa',
-  'Campo Grande',
-  'Casa Amarela',
-  'Caxangá',
-  'Coelhos',
-  'Cordeiro',
-  'Derby',
-  'Dois Irmãos',
-  'Encruzilhada',
-  'Espinheiro',
-  'Graças',
-  'Ibura',
-  'Imbiribeira',
-  'IPSEP',
-  'Iputinga',
-  'Jaqueira',
-  'Jardim São Paulo',
-  'Madalena',
-  'Mustardinha',
-  'Parnamirim',
-  'Pina',
-  'Prado',
-  'Recife (Centro)',
-  'Rosarinho',
-  'San Martin',
-  'Santo Amaro',
-  'São José',
-  'Tamarineira',
-  'Tejipió',
-  'Torre',
-  'Torreão',
-  'Várzea',
-];
-
-const SITUACAO_INICIAL = 'Em Andamento';
+import { BAIRROS_RECIFE, SITUACAO_INICIAL, TIPOS_DENUNCIA } from '@/constants';
 
 export default function NovaDenunciaScreen() {
   const { user } = useAuthStore();
@@ -307,7 +255,7 @@ export default function NovaDenunciaScreen() {
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Selecione o Tipo</Text>
-            {TIPOS_DENUNCIA.map((tipo) => (
+            {TIPOS_DENUNCIA.map(({ label: tipo }) => (
               <TouchableOpacity
                 key={tipo}
                 style={[styles.modalOption, tipo === tipoDenuncia && styles.modalOptionSelected]}

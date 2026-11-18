@@ -16,20 +16,16 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
 import type { Denuncia } from '@/types';
+import { normalizeSituacao, SITUACAO_CONFIG, SITUACOES, type Situacao } from '@/constants';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
-
-const SITUACAO_CONFIG: Record<string, { bg: string; text: string; label: string; icon: IconName }> = {
-  'Em Andamento': { bg: '#DBEAFE', text: '#1E40AF', label: 'Em Andamento', icon: 'refresh-outline' },
-  'Resolvido':    { bg: '#D1FAE5', text: '#065F46', label: 'Resolvido',    icon: 'checkmark-circle-outline' },
-};
 
 export default function MinhasDenunciasScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { denuncias, loading, fetchDenuncias } = useDenunciasStore();
   const [search, setSearch] = useState('');
-  const [filtroSituacao, setFiltroSituacao] = useState<string | null>(null);
+  const [filtroSituacao, setFiltroSituacao] = useState<Situacao | null>(null);
 
   useEffect(() => {
     fetchDenuncias();
@@ -43,12 +39,11 @@ export default function MinhasDenunciasScreen() {
       d.tipoDenuncia.toLowerCase().includes(search.toLowerCase()) ||
       d.bairroOcorrencia.toLowerCase().includes(search.toLowerCase()) ||
       d.protocolo.toLowerCase().includes(search.toLowerCase());
-    const matchFiltro = !filtroSituacao || d.situacao === filtroSituacao;
+    const matchFiltro = !filtroSituacao || normalizeSituacao(d.situacao) === filtroSituacao;
     return matchSearch && matchFiltro;
   });
 
-  const getSituacao = (situacao: string) =>
-    SITUACAO_CONFIG[situacao] || { bg: '#F3F4F6', text: '#374151', label: situacao, icon: 'help-outline' };
+  const getSituacao = (situacao: string) => SITUACAO_CONFIG[normalizeSituacao(situacao)];
 
   const renderItem = ({ item }: { item: Denuncia }) => {
     const sit = getSituacao(item.situacao);
@@ -124,7 +119,7 @@ export default function MinhasDenunciasScreen() {
         contentContainerStyle={styles.filtros}
         style={{ flexGrow: 0, flexShrink: 0, height: 40, marginBottom: 8 }}
       >
-        {([null, 'Em Andamento', 'Resolvido'] as (string | null)[]).map((s) => {
+        {([null, ...SITUACOES] as (Situacao | null)[]).map((s) => {
           const active = filtroSituacao === s;
           const label = s ? getSituacao(s).label : 'Todas';
           return (

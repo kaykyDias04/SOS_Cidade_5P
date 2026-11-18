@@ -22,17 +22,10 @@ import { denunciasAPI } from '@/services/denunciaService';
 import { notificarMudancaStatus } from '@/services/notifications';
 import type { Denuncia } from '@/types';
 import { useRouter } from 'expo-router';
-
-
-const SITUACOES = ['Em Andamento', 'Resolvido'];
-
-const SITUACAO_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  'Em Andamento': { bg: '#DBEAFE', text: '#1E40AF', label: 'Em Andamento' },
-  'Resolvido':    { bg: '#D1FAE5', text: '#065F46', label: 'Resolvido' },
-};
+import { normalizeSituacao, SITUACAO_CONFIG, SITUACOES, type Situacao } from '@/constants';
 
 function getSit(s: string) {
-  return SITUACAO_CONFIG[s] || { bg: '#F3F4F6', text: '#374151', label: s };
+  return SITUACAO_CONFIG[normalizeSituacao(s)];
 }
 
 function parseImagens(imagens: unknown): string[] {
@@ -107,7 +100,7 @@ export default function DenunciasGestorScreen() {
     return matchSearch;
   });
 
-  const handleUpdateStatus = async (novaSituacao: string) => {
+  const handleUpdateStatus = async (novaSituacao: Situacao) => {
     if (!selectedDenuncia) return;
     setUpdatingStatus(true);
     try {
@@ -116,7 +109,7 @@ export default function DenunciasGestorScreen() {
         updateDenunciaLocalmente(selectedDenuncia.protocolo, novaSituacao);
         notificarMudancaStatus(selectedDenuncia.protocolo, selectedDenuncia.tipoDenuncia, novaSituacao);
         setSelectedDenuncia((d) => d ? { ...d, situacao: novaSituacao } : d);
-        Toast.show({ type: 'success', text1: 'Status atualizado!', text2: `Denúncia marcada como ${SITUACAO_CONFIG[novaSituacao]?.label ?? novaSituacao}` });
+        Toast.show({ type: 'success', text1: 'Status atualizado!', text2: `Denúncia marcada como ${SITUACAO_CONFIG[novaSituacao].label}` });
       } else {
         Toast.show({ type: 'error', text1: 'Erro', text2: 'Falha ao atualizar status' });
       }
@@ -285,7 +278,7 @@ export default function DenunciasGestorScreen() {
                 <View style={{ gap: 8 }}>
                   {SITUACOES.map((s) => {
                     const cfg = getSit(s);
-                    const current = selectedDenuncia.situacao === s;
+                    const current = normalizeSituacao(selectedDenuncia.situacao) === s;
                     return (
                       <TouchableOpacity
                         key={s}
