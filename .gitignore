@@ -44,3 +44,6 @@ resultados/
 
 # relatórios HTML de qualidade gerados pela action
 relatorios/
+
+# histórico de artifacts baixado somente para revisão local/CI
+/history/

@@ -34,6 +34,15 @@ jobs:
       - name: Instalar dependências do backend
         run: npm ci --prefix backend
 
+      - name: Instalar runner para validação isolada
+        run: npm ci --prefix e2e
+
+      - name: Validar política de gestão de testes
+        run: npm run test:management:validate
+
+      - name: Validar quarentena e preservação do quality gate
+        run: npm run test:management:selftest
+
       # Frontend e backend em passos separados: se um falhar, o outro roda mesmo
       # assim e o seu XML não fica faltando nas métricas.
       - name: Testes unitários (frontend)
@@ -46,6 +55,25 @@ jobs:
       - name: Testes de API
         if: ${{ !cancelled() }}
         run: npm run test:api
+
+      - name: Testes em quarentena (falhas isoladas)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          QUARANTINE_RETRIES: ${{ vars.QUARANTINE_RETRIES || '2' }}
+        run: npm run test:quarantine -- frontend backend api
+
+      - name: Relatório de gestão dos testes
+        if: ${{ !cancelled() }}
+        run: npm run test:review
+
+      - name: Salvar quarentena e revisão separadamente
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: gestao-quarentena
+          path: relatorios/
+          retention-days: 30
 
       # Sobe sempre, verde ou vermelho: os XML alimentam as métricas e os relatórios.
       - name: Salvar resultados dos testes
