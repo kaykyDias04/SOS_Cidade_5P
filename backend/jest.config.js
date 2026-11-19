@@ -11,6 +11,9 @@ module.exports = {
     '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tests/tsconfig.json' }],
   },
   clearMocks: true,
+  collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
+  coverageDirectory: path.resolve(__dirname, '../resultados/cobertura-backend'),
+  coverageReporters: ['text-summary', 'lcov', 'json-summary'],
   // Além da saída no terminal, grava o resultado em JUnit XML para a pipeline
   // (artefato e cálculo de métricas). Contrato: resultados/unit-backend.xml na raiz.
   reporters: [
