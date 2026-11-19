@@ -100,31 +100,31 @@
   "criticalTests": [
     {
       "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
-      "title": "deve permitir cadastrar uma nova conta de cidadão"
+      "title": "CT-E2E-04: deve permitir cadastrar uma nova conta de cidadão"
     },
     {
       "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
-      "title": "deve logar com a conta recém-criada e cair na home do denunciante"
+      "title": "CT-E2E-05: deve logar com a conta recém-criada e cair na home do denunciante"
     },
     {
       "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
-      "title": "não deve logar com senha incorreta (caminho negativo)"
+      "title": "CT-E2E-06: não deve logar com senha incorreta (caminho negativo)"
     },
     {
       "file": "e2e/tests/denunciante-fluxo-completo.spec.ts",
-      "title": "deve registrar uma nova denúncia e vê-la em \"Minhas Denúncias\""
+      "title": "CT-E2E-07: deve registrar uma nova denúncia e vê-la em \"Minhas Denúncias\""
     },
     {
       "file": "e2e/tests/fluxo-denuncia-cidadao.spec.ts",
-      "title": "cidadão se cadastra, registra uma denúncia e a encontra em Minhas Denúncias @smoke"
+      "title": "CT-E2E-01: cidadão se cadastra, registra uma denúncia e a encontra em Minhas Denúncias @smoke"
     },
     {
       "file": "e2e/tests/gestor-fluxo.spec.ts",
-      "title": "deve logar como gestor e acessar o Dashboard Interativo @smoke"
+      "title": "CT-E2E-02: deve logar como gestor e acessar o Dashboard Interativo @smoke"
     },
     {
       "file": "e2e/tests/gestor-fluxo.spec.ts",
-      "title": "denunciante comum não deve conseguir acessar rota do gestor @smoke"
+      "title": "CT-E2E-03: denunciante comum não deve conseguir acessar rota do gestor @smoke"
     }
   ]
 }

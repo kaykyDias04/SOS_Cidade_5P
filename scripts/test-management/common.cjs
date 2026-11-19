@@ -4,7 +4,7 @@ const root = path.resolve(__dirname, '../..');
 const policy = require('./policy.json');
 const registry = require('./quarantine.json');
 const tag = /(?:^|\s)@flaky(?=\s|$)/;
-const idOf = name => name.match(/\b(?:CT-[A-Z]+|UN-[A-Z]+|ATDD|BDD|TDD)-\d+[ab]?\b/)?.[0] ?? null;
+const idOf = name => name.match(/\b(?:CT-[A-Z0-9]+|UN-[A-Z]+|ATDD|BDD|TDD)-\d+[ab]?\b/)?.[0] ?? null;
 const relative = file => path.relative(root, file).replaceAll('\\', '/');
 function save(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });

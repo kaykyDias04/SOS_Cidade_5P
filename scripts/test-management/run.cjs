@@ -68,6 +68,8 @@ function run(suite, mode) {
     if (['backend', 'api'].includes(suite)) {
       cwd = path.join(root, suite === 'backend' ? 'backend' : 'tests');
       args = [path.join(root, 'backend/node_modules/jest/bin/jest.js'), '--config', 'jest.config.js', '--runInBand'];
+      // Cobertura do backend no artefato (resultados/cobertura/, ver tests/jest.config.js).
+      if (suite === 'api' && !quarantine) args.push('--coverage');
     } else if (suite === 'frontend') {
       args = ['--test', quarantine ? '--test-name-pattern=(?:^|\\s)@flaky(?:\\s|$)' : '--test-skip-pattern=(?:^|\\s)@flaky(?:\\s|$)', '--test-reporter='+pathToFileURL(path.join(__dirname, 'frontend-reporter.mjs')).href, ...fs.readdirSync(path.join(root, 'frontend/tests')).filter(f => f.endsWith('.test.mjs')).map(f => path.join(root, 'frontend/tests', f))];
     } else {
