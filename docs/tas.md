@@ -113,3 +113,20 @@ Cada etapa tem um papel com dono definido. O nome do responsável vai no campo "
 4. A action `rotular-manutencao` aplica as labels de tipo, prioridade e, se for o caso, `flaky`.
 5. O responsável pela correção abre um pull request que cita a issue.
 6. Depois do merge e de uma execução verde, a issue é fechada com o link da correção.
+
+---
+
+### 1.7 Nota Técnica Arquitetural: Fronteira Web vs. Mobile e Validação E2E de Notificação
+
+Em resposta ao feedback pedagógico sobre o fluxo **Registrar -> Acompanhar -> Notificar**:
+
+1. **Fronteira Arquitetural (Isolamento de Responsabilidade)**:
+   - O mecanismo de **notificação ativa / push sonoro** foi projetado exclusivamente para a camada nativa móvel via `expo-notifications` (`mobile/src/lib/notifications.ts`), sendo desligado no runtime web (`Platform.OS === 'web'`).
+   - A aplicação Web (Next.js) opera sob o modelo de **zeladoria urbana reativa**, onde o canal de acompanhamento do cidadão é a tela de histórico `/minhas-denuncias`. O backend REST não implementa WebSockets nem SSE para avisos em tempo real no browser.
+
+2. **Garantia E2E Automatizada (`CT-E2E-08`)**:
+   - Para assegurar que o valor de negócio do ciclo seja validado de ponta a ponta sem violação de fronteira arquitetural, foi implementado o teste E2E multi-sessão:
+     - Arquivo: `e2e/tests/status-denuncia-gestor-denunciante.spec.ts`
+     - Cenário: `CT-E2E-08: Denunciante vê "Finalizada" em Minhas Denúncias depois que o Gestor finaliza a denúncia`
+     - Funcionamento: Um contexto de browser do cidadão abre a denúncia ("Em andamento"); um segundo contexto isolado do gestor altera a situação para "Finalizada" via diálogo administrativo; o contexto do cidadão atualiza e comprova a transição de estado.
+   - Dessa forma, o ciclo "Registrar -> Acompanhar -> Notificar" está formalmente comprovado no escopo Web pelo acompanhamento persistido, enquanto o push ativo fica devidamente circunscrito ao ecossistema Mobile nativo.

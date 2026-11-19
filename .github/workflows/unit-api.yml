@@ -52,9 +52,9 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run test:unit:backend
 
-      - name: Testes de API
+      - name: Testes de API (com cobertura)
         if: ${{ !cancelled() }}
-        run: npm run test:api
+        run: npm run test:coverage
 
       - name: Testes em quarentena (falhas isoladas)
         if: ${{ !cancelled() }}
@@ -83,6 +83,18 @@ jobs:
         with:
           name: resultados-testes
           path: resultados/
+          retention-days: 30
+          overwrite: true
+
+      # Sobe artefato dedicado com relatórios de cobertura (HTML e LCOV)
+      - name: Salvar relatório de cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-cobertura
+          path: |
+            resultados/cobertura/
+            coverage/
           retention-days: 30
           overwrite: true
 

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "npm --prefix tests test",
+    "test:coverage": "node scripts/test-management/run.cjs api",
     "test:unit": "npm run test:unit:frontend && npm run test:unit:backend",
     "test:unit:frontend": "node scripts/test-management/run.cjs frontend",
     "test:unit:backend": "node scripts/test-management/run.cjs backend",
