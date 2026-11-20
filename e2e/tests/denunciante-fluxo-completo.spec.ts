@@ -19,7 +19,7 @@ import { generateTestUser, denunciaValida } from './fixtures/testData';
 test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúncia', () => {
   const usuario = generateTestUser();
 
-  test('deve permitir cadastrar uma nova conta de cidadão', async ({ page }) => {
+  test('CT-E2E-04: deve permitir cadastrar uma nova conta de cidadão', async ({ page }) => {
     await page.goto('/login');
 
     // O formulário de cadastro fica na mesma tela de login, lado a lado
@@ -36,7 +36,7 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
     await expect(page.getByText('Cadastro realizado com sucesso')).toBeVisible();
   });
 
-  test('deve logar com a conta recém-criada e cair na home do denunciante', async ({ page }) => {
+  test('CT-E2E-05: deve logar com a conta recém-criada e cair na home do denunciante', async ({ page }) => {
     await page.goto('/login');
 
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
@@ -50,7 +50,7 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
     await expect(page.getByRole('heading', { name: /^Olá,/ })).toBeVisible();
   });
 
-  test('não deve logar com senha incorreta (caminho negativo)', async ({ page }) => {
+  test('CT-E2E-06: não deve logar com senha incorreta (caminho negativo)', async ({ page }) => {
     await page.goto('/login');
 
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
@@ -63,7 +63,7 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('deve registrar uma nova denúncia e vê-la em "Minhas Denúncias"', async ({ page }) => {
+  test('CT-E2E-07: deve registrar uma nova denúncia e vê-la em "Minhas Denúncias"', async ({ page }) => {
     // login
     await page.goto('/login');
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');

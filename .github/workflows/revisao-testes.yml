@@ -1,0 +1,51 @@
+name: revisao-testes
+
+on:
+  schedule:
+    - cron: '0 12 * * 1' # segunda, 09:00 em Brasília
+  workflow_dispatch:
+    inputs:
+      tipo:
+        description: Revisão semanal ou completa da sprint
+        type: choice
+        options: [semanal, sprint]
+        default: sprint
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  revisao-testes:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci --prefix backend
+      - run: npm ci --prefix e2e # somente runner/versão; não instala Chromium nem executa E2E
+      - name: Validar política e registro
+        run: npm run test:management:validate
+      - name: Coletar histórico disponível
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/test-management/history.cjs
+      - name: Gerar revisão
+        if: ${{ !cancelled() }}
+        env:
+          REVIEW_TYPE: ${{ inputs.tipo || 'semanal' }}
+        run: |
+          npm run test:review
+          cat relatorios/gestao/review.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publicar evidências da revisão
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: revisao-testes
+          path: relatorios/gestao/
+          retention-days: 90

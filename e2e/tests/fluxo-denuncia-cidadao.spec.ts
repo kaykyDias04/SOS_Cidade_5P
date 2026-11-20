@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
  * Fluxo funcional central do perfil Denunciante:
  * Cadastro -> Login -> Nova ocorrência -> Acompanhamento em Minhas Denúncias.
  */
-test('cidadão se cadastra, registra uma denúncia e a encontra em Minhas Denúncias @smoke', async ({
+test('CT-E2E-01: cidadão se cadastra, registra uma denúncia e a encontra em Minhas Denúncias @smoke', async ({
   page,
 }) => {
   const timestamp = Date.now();

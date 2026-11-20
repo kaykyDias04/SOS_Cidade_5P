@@ -355,10 +355,51 @@ A tabela a seguir correlaciona cada caso de teste automatizado ao seu arquivo fo
 | **CT-USR-01 a 12** | Integração | Cadastro de denunciante, e-mail duplicado, exclusão e bloqueio 403 de denunciante | `tests/03_users.test.ts` | `unit-api` e `regressao-completa` |
 | **CT-DEN-01 a 20** | Integração | Criação, denúncia anônima, paginação, cache Redis, exclusão, bloqueios 403 e histórico pessoal | `tests/04_denuncias.test.ts` | `unit-api` e `regressao-completa` |
 | **CT-CON-01 a 04** | Integração | Validação de contrato OpenAPI/Swagger dos modelos User e Denuncia | `tests/05_api_contracts.test.ts` | `unit-api` e `regressao-completa` |
-| **E2E Smoke: Cidadão** | Sistema | Jornada completa: cadastro, login, abertura de denúncia e confirmação no histórico | `e2e/tests/fluxo-denuncia-cidadao.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
-| **E2E Smoke: Gestor** | Sistema | Login administrativo com seed e acesso ao Dashboard Interativo | `e2e/tests/gestor-fluxo.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
-| **E2E Smoke: Segurança** | Sistema | Tentativa de acesso do cidadão comum a rotas administrativas do gestor | `e2e/tests/gestor-fluxo.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
-| **E2E Jornada Denunciante** | Sistema | Testes modulares da jornada (cadastro, login positivo/negativo e nova denúncia) | `e2e/tests/denunciante-fluxo-completo.spec.ts` | `regressao-completa` |
+| **CT-E2E-01** (smoke: cidadão) | Sistema | Jornada completa: cadastro, login, abertura de denúncia e confirmação no histórico | `e2e/tests/fluxo-denuncia-cidadao.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
+| **CT-E2E-02** (smoke: gestor) | Sistema | Login administrativo com seed e acesso ao Dashboard Interativo | `e2e/tests/gestor-fluxo.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
+| **CT-E2E-03** (smoke: segurança) | Sistema | Tentativa de acesso do cidadão comum a rotas administrativas do gestor | `e2e/tests/gestor-fluxo.spec.ts` (`@smoke`) | `e2e-smoke` e `regressao-completa` |
+| **CT-E2E-04 a 07** (jornada do denunciante) | Sistema | Testes modulares da jornada (cadastro, login positivo/negativo e nova denúncia) | `e2e/tests/denunciante-fluxo-completo.spec.ts` | `regressao-completa` |
+| **CT-E2E-08** (acompanhamento) | Sistema | Gestor finaliza a denúncia pela tela e o denunciante vê a nova situação em Minhas Denúncias | `e2e/tests/status-denuncia-gestor-denunciante.spec.ts` | `regressao-completa` |
+| **Notificação de mudança de status** | Sistema | Existe só no app mobile, como notificação local (`mobile/src/lib/notifications.ts`). No web não há aviso ativo ao denunciante | *Sem teste automatizado* | *Fora da pipeline: o E2E web não alcança o app mobile* |
 | **R2-CT-53 a 55** | Componente | Transição proibida de status (Finalizada → Em Andamento) | *Sem teste implementado* | *Pendente da implementação da regra no backend* |
 | **E2E Dashboard & Mapa** | Sistema | Consistência visual e mapa de calor por bairro | *Verificação manual* | *Execução manual por release (decisão de ROI da seção 5)* |
+
+### 8.3 Convenção de identificadores
+
+Todo teste automatizado leva o identificador no início do título (`it` ou `test`), no formato abaixo. O identificador é o elo entre este plano, o código e os relatórios da pipeline.
+
+| Prefixo | Significa | Onde aparece |
+| --- | --- | --- |
+| `CT-<MÓDULO>-NN` | Caso de teste de integração (API) ou de sistema (E2E). Módulos: `INF` infraestrutura, `AUT` autenticação, `USR` usuários, `DEN` denúncias, `CON` contratos, `E2E` ponta a ponta | `tests/` e `e2e/tests/` |
+| `UN-<ÁREA>-NN` | Teste unitário do backend | `backend/tests/unit/` |
+| `TDD-NN`, `BDD-NN`, `ATDD-NN` | Teste unitário do frontend, nomeado pela abordagem que o originou | `frontend/tests/` |
+| `R2-CT-NN` | Caso da segunda rodada com IA, ainda sem teste implementado | só neste plano |
+| `CA-NN` | Critério de aceitação de uma história de usuário (HU). **Não é um teste**: é o requisito que o teste verifica | só neste plano |
+
+Atenção a um falso amigo: em `CT-AUT-11`, `AUT` é o módulo **autenticação**, e não "automatizado". Todos os testes automatizados seguem essa convenção. O texto da primeira rodada com IA (seção 4.1) mistura `CT` e `CA` e preserva a numeração original da IA de propósito, como registro do que ela entregou.
+
+## 9. Gestão dos Testes
+
+Complemento do tópico 2 da TAS: [política e operação](docs/testes/gestao-testes.md), [evidências locais](docs/testes/evidencias-validacao.md). Preserva o conteúdo e o escopo anterior; não altera a pendência da máquina de estados nem a verificação manual de Dashboard/Mapa.
+
+| Processo | Implementação | Responsável/decisão |
+| --- | --- | --- |
+| Identificação de instabilidade | Diagnóstico repetido, histórico disponível, ID/arquivo/erro/duração/tentativas; falha seguida de sucesso continua registrada como falha | Triador da semana/autor do push investiga; uma falha não confirma flaky |
+| Quarentena `@flaky` | Registro com motivo, dono, data, evidência, aprovador e saída; execução separada no Jest, node:test e Playwright | QA e outro integrante revisam evidência; testes críticos protegidos continuam ativos |
+| Retry automático | Configurável só na quarentena; todas as tentativas preservadas em JSON/logs; tolerância apenas na etapa isolada | João Pedro mantém integração CI; Marcos mantém automação |
+| Revisão semanal | Segunda às 09:00 de Brasília via `revisao-testes`; métricas, rastreabilidade, duplicação candidata, idade e cobertura crítica | Triador registra ações, dono, prioridade e prazo |
+| Revisão completa por sprint | Execução manual do workflow com tipo `sprint`; análise humana de obsolescência, HU/CA e equivalência de cobertura | QA + donos de requisitos aprovam decisões |
+| Remoção | Checklist e registro de justificativa, solicitante, aprovador distinto, riscos assumidos e cobertura restante | Exige aprovação explícita antes de excluir qualquer teste; nenhuma exclusão feita nesta entrega |
+
+Os checks `unit-api` e `e2e-smoke` e o job `regressao-completa` são preservados. `resultados-testes` guarda os resultados normais; `gestao-quarentena` guarda relatórios de gestão e quarentena. O workflow adicional de revisão coleta artefatos disponíveis sem executar seu conteúdo. A implantação/agendamento remoto dependem da revisão e de um futuro commit autorizado.
+
+Comandos principais: `npm run test:management:validate`, `npm run test:management:selftest`, `npm run test:diagnostic -- api diagnostic`, `npm run test:quarantine -- frontend backend api e2e`, `npm run test:review`. Limiares configuráveis e lista de casos críticos: `scripts/test-management/policy.json`; rastreabilidade por arquivo: `traceability.json`. As lacunas de HU e os pressupostos das seções 4.5 e 8 continuam explícitos.
+
+### 9.1 Critérios finais de evidência e responsabilidades
+
+Métricas e suspeitas de intermitência são separadas por SHA, digest dos arquivos executáveis e ambiente (Node/frameworks/plataforma/perfil). Histórico legado é preservado, mas não aprova cobertura atual. Testes críticos exigem resultado recente da revisão atual (até 24 h), sem falha inicial; todos os 7 E2E, incluindo a jornada modular, estão protegidos contra quarentena/desativação/ausência. A saída de quarentena requer identificação da correção e 10 execuções independentes consecutivas aprovadas em contexto equivalente, mais aprovação humana.
+
+Os quatro tópicos da atividade estão concentrados em `docs/testes/gestao-testes.md`: testes instáveis (1), quarentena e automação (2), revisão periódica (3), remoção e checklist (4). A finalização desta parte valida apenas gestão, unitários e API, sem Docker e sem execução E2E real. As demonstrações sintéticas da quarentena não são testes ponta a ponta do produto.
+
+Preparação da stack, execução dos 7 cenários e validação remota posterior ficam com outro integrante, conforme a seção **Pendências para o responsável pelos testes E2E** do documento de gestão. Há comandos, caminhos de logs/screenshots/traces e critérios de conferência prontos. Nenhum teste foi removido, nenhuma alteração foi publicada e nenhuma aprovação foi presumida.
 

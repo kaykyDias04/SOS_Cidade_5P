@@ -41,6 +41,9 @@ jobs:
 
       - uses: ./.github/actions/subir-stack
 
+      - name: Validar política de gestão de testes
+        run: npm run test:management:validate
+
       # Frontend e backend em passos separados: se um falhar, o outro roda mesmo
       # assim e o seu XML não fica faltando nas métricas.
       - name: Testes unitários (frontend)
@@ -50,13 +53,32 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run test:unit:backend
 
-      - name: Testes de API
+      - name: Testes de API (com cobertura)
         if: ${{ !cancelled() }}
-        run: npm run test:api
+        run: npm run test:coverage
 
       - name: Testes End-to-End (E2E)
         if: ${{ !cancelled() }}
         run: npm run test:e2e
+
+      - name: Testes em quarentena (falhas isoladas)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          QUARANTINE_RETRIES: ${{ vars.QUARANTINE_RETRIES || '2' }}
+        run: npm run test:quarantine -- frontend backend api e2e
+
+      - name: Relatório de gestão dos testes
+        if: ${{ !cancelled() }}
+        run: npm run test:review
+
+      - name: Salvar quarentena e revisão separadamente
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: gestao-quarentena
+          path: relatorios/
+          retention-days: 30
 
       # Sobe sempre, verde ou vermelho: XML de todas as suítes, logs do backend e do
       # frontend (gerados pela action subir-stack) e o relatório HTML do E2E.
@@ -71,6 +93,18 @@ jobs:
             backend/backend.log
             frontend/frontend.log
             e2e/playwright-report/
+          retention-days: 30
+          overwrite: true
+
+      # Sobe artefato dedicado com relatórios de cobertura (HTML e LCOV)
+      - name: Salvar relatório de cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-cobertura
+          path: |
+            resultados/cobertura/
+            coverage/
           retention-days: 30
           overwrite: true
 
