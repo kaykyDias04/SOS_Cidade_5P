@@ -3,8 +3,14 @@
 **Disciplina / Contexto:** Projeto Integrador — Projetos 5  
 **Sistema sob Teste (SUT):** S.O.S-Cidade (Recife)  
 **Squad:** S.O.S-Cidade / Projetos 5  
-**Data:** Setembro de 2026  
-**Status da Suíte:** 100% Aprovada (5 Suítes, 47 Testes Passando, 0 Falhas)
+**Data da execução original:** Setembro de 2026
+**Status original:** 5 suítes, 47 testes aprovados na execução registrada abaixo. Este número é histórico, não o total atual.
+
+### Revalidação em 19/11/2026
+
+Na validação atual, `npm test` executou **57 testes de API em 5 suítes, todos aprovados**; os testes unitários do backend passaram com 31 testes, e os unitários de frontend com 8. O Playwright descobriu 7 testes em 3 arquivos, mas os E2E de navegador não foram executados nesta validação. Foram acrescentados cenários de aceite legal no cadastro/login e autorização de acesso por ID; os testes de API confirmam que respostas anônimas ocultam `userId` e que outro denunciante recebe 404.
+
+Os detalhes e resultados apresentados nas seções seguintes descrevem a entrega original de setembro de 2026, salvo quando explicitamente atualizados acima. Não use afirmações históricas de segurança ou cobertura como descrição do estado atual.
 
 ---
 
@@ -25,7 +31,7 @@ O **S.O.S-Cidade** é uma plataforma de gestão e registro de ocorrências de ze
 
 ## 2. Endpoints Contemplados
 
-A suíte automatizada cobre **100% dos endpoints** disponibilizados pela API do SUT:
+A suíte automatizada cobre os endpoints e cenários selecionados abaixo; essa relação não representa cobertura integral da API:
 
 | Módulo | Verbo HTTP | Endpoint | Descrição / Regra de Negócio | Autenticação Requerida |
 | :--- | :---: | :--- | :--- | :---: |
@@ -33,13 +39,14 @@ A suíte automatizada cobre **100% dos endpoints** disponibilizados pela API do 
 | **Documentação** | `GET` | `/api-docs` | Interface gráfica interativa da especificação OpenAPI | Não |
 | **Autenticação** | `POST` | `/auth/login` | Autenticação com email/senha, emissão de JWT e cookie HttpOnly | Não |
 | **Autenticação** | `POST` | `/auth/logout` | Encerramento de sessão e limpeza do cookie `authToken` | Não |
-| **Usuários** | `POST` | `/users` | Cadastro de novos usuários (Denunciante ou Gestor) | Não |
-| **Usuários** | `GET` | `/users` | Listagem de usuários filtrada por query param `role` | Não |
-| **Usuários** | `DELETE` | `/users/:id` | Exclusão de usuário com validação de ID numérico | Não |
+| **Usuários** | `POST` | `/users` | Cadastro público de denunciante com aceite legal explícito | Não |
+| **Usuários** | `GET` | `/users` | Listagem de usuários filtrada por `role`, exclusiva de gestor | **Sim (JWT/Cookie)** |
+| **Usuários** | `DELETE` | `/users/:id` | Exclusão por gestor com validação de ID numérico | **Sim (JWT/Cookie)** |
 | **Denúncias** | `POST` | `/denuncias` | Abertura de denúncia (identificada/anônima, protocolo SOS) | **Sim (JWT/Cookie)** |
 | **Denúncias** | `GET` | `/denuncias` | Listagem paginada (`_page`, `_limit`) com cache Redis | **Sim (JWT/Cookie)** |
-| **Denúncias** | `GET` | `/denuncias/:id` | Consulta detalhada por ID com desserialização de imagens | **Sim (JWT/Cookie)** |
-| **Denúncias** | `PATCH` | `/denuncias/:id` | Atualização de status da ocorrência e fotos anexadas | **Sim (JWT/Cookie)** |
+| **Denúncias** | `GET` | `/denuncias/minhas` | Histórico filtrado pelo usuário do token | **Sim (JWT/Cookie)** |
+| **Denúncias** | `GET` | `/denuncias/:id` | Consulta pelo titular ou gestor; demais denunciantes recebem 404 | **Sim (JWT/Cookie)** |
+| **Denúncias** | `PATCH` | `/denuncias/:id` | Atualização da situação, exclusiva de gestor | **Sim (JWT/Cookie)** |
 | **Denúncias** | `DELETE` | `/denuncias/:id` | Remoção de denúncia e invalidação do cache Redis | **Sim (JWT/Cookie)** |
 
 ---

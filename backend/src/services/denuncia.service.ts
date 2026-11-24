@@ -1,4 +1,4 @@
-import { DenunciaRepository } from '../repositories/denuncia.repository';
+import { DenunciaRepository, type DenunciaFiltros } from '../repositories/denuncia.repository';
 import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis';
 import { encrypt, decrypt } from '../lib/crypto';
 
@@ -15,7 +15,11 @@ export class DenunciaService {
       parsed = { ...d, imagens: null };
     }
 
-    if (typeof parsed.nomeDenunciante === 'string') {
+    const anonima = parsed.identificacao === false;
+    if (anonima) {
+      parsed.nomeDenunciante = 'Anônimo';
+      delete parsed.userId;
+    } else if (typeof parsed.nomeDenunciante === 'string') {
       try {
         parsed.nomeDenunciante = decrypt(parsed.nomeDenunciante);
       } catch {
@@ -34,9 +38,16 @@ export class DenunciaService {
     return parsed;
   }
 
-  async getDenuncias(page: number, limit: number, userId?: number) {
-    const cacheKey = `denuncias:${userId ?? 'all'}:${page}:${limit}`;
-    
+  async getDenuncias(page: number, limit: number, userId?: number, filtros: DenunciaFiltros = {}) {
+    const hasFilters = Object.values(filtros).some(Boolean);
+    const filterKey = hasFilters
+      ? `:${JSON.stringify({
+          tipoDenuncia: filtros.tipoDenuncia ?? null,
+          bairroOcorrencia: filtros.bairroOcorrencia ?? null,
+          situacao: filtros.situacao ?? null,
+        })}`
+      : '';
+    const cacheKey = `denuncias:v2:${userId ?? 'all'}:${page}:${limit}${filterKey}`;
     
     const cached = await redisGet(cacheKey);
     if (cached) {
@@ -50,8 +61,8 @@ export class DenunciaService {
     try {
       const skip = (page - 1) * limit;
       const [denuncias, total] = await Promise.all([
-        this.denunciaRepository.findAll(skip, limit, userId),
-        this.denunciaRepository.count(userId)
+        this.denunciaRepository.findAll(skip, limit, userId, filtros),
+        this.denunciaRepository.count(userId, filtros)
       ]);
 
       const result = {
@@ -67,18 +78,24 @@ export class DenunciaService {
     }
   }
 
-  async getDenunciaById(id: number) {
+  async getDenunciaById(id: number, requester: { id: number; role: string }) {
     const d = await this.denunciaRepository.findById(id);
+    if (!d || (requester.role !== 'GESTOR' && d.userId !== requester.id)) {
+      return null;
+    }
     return this.parseImagens(d);
   }
 
   async createDenuncia(data: any) {
     const protocolo = data.protocolo || ('SOS-' + new Date().getFullYear() + '-' + Math.random().toString(36).substring(2, 10).toUpperCase());
+    const identificacao = data.identificacao === true;
     
     const denuncia = await this.denunciaRepository.create({
       tipoDenuncia: data.tipoDenuncia,
-      identificacao: data.identificacao,
-      nomeDenunciante: encrypt(data.identificacao ? (data.nomeDenunciante || data.userEmail) : 'Anônimo'),
+      identificacao,
+      nomeDenunciante: identificacao
+        ? encrypt(data.nomeDenunciante || data.userEmail || '')
+        : '',
       user: data.userId ? { connect: { id: data.userId } } : undefined,
       bairroOcorrencia: data.bairroOcorrencia,
       descricaoOcorrencia: encrypt(data.descricaoOcorrencia),

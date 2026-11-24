@@ -6,8 +6,13 @@ export class AuthController {
 
   async login(req: Request, res: Response) {
     try {
-      const { email, password } = req.body;
-      const { user, token } = await this.authService.login(email, password);
+      const { email, password, acceptedTerms, acceptedPrivacy } = req.body;
+      const { user, token } = await this.authService.login(
+        email,
+        password,
+        acceptedTerms,
+        acceptedPrivacy,
+      );
       
       
       
@@ -20,6 +25,9 @@ export class AuthController {
 
       res.json({ user, token });
     } catch (error: any) {
+      if (error.code === 'LEGAL_CONSENT_REQUIRED') {
+        return res.status(400).json({ success: false, error: error.message });
+      }
       res.status(401).json({ success: false, error: error.message });
     }
   }

@@ -6,6 +6,10 @@ export interface MockUser {
   name: string;
   password: string;
   role: string;
+  termsAcceptedAt?: Date | null;
+  privacyAcceptedAt?: Date | null;
+  termsVersion?: string | null;
+  privacyVersion?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -168,6 +172,10 @@ export const mockPrisma = {
         name: data.name,
         password: data.password,
         role: data.role || 'DENUNCIANTE',
+        termsAcceptedAt: data.termsAcceptedAt || null,
+        privacyAcceptedAt: data.privacyAcceptedAt || null,
+        termsVersion: data.termsVersion || null,
+        privacyVersion: data.privacyVersion || null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -184,6 +192,13 @@ export const mockPrisma = {
       }
       const deleted = users.splice(idx, 1)[0];
       return deleted;
+    }),
+
+    update: jest.fn(async ({ where, data }: { where: { id: number }; data: any }) => {
+      const user = users.find((item) => item.id === where.id);
+      if (!user) throw new Error('Record to update does not exist.');
+      Object.assign(user, data, { updatedAt: new Date() });
+      return user;
     }),
   },
 

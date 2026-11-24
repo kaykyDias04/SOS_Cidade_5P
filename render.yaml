@@ -32,5 +32,7 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: DATA_ENCRYPTION_KEY
+        sync: false
       - key: FRONTEND_URL
         sync: false

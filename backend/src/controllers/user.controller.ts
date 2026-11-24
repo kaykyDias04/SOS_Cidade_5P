@@ -9,6 +9,9 @@ export class UserController {
       const user = await this.userService.createUser(req.body);
       res.json({ id: user.id, email: user.email, name: user.name, role: user.role });
     } catch (error: any) {
+      if (error.code === 'LEGAL_CONSENT_REQUIRED') {
+        return res.status(400).json({ success: false, error: error.message });
+      }
       console.error('Error creating user:', error);
       
       if (error.code === 'P2002') {

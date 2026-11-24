@@ -25,6 +25,7 @@ import app from '../backend/src/app';
 describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Rotas', () => {
   beforeEach(() => {
     resetMockDb();
+    jest.clearAllMocks();
   });
 
   describe('POST /auth/login - Autenticação de Usuário e Criação de Sessão', () => {
@@ -34,6 +35,8 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
         .send({
           email: 'denunciante@sos.com',
           password: 'senha123',
+          acceptedTerms: true,
+          acceptedPrivacy: true,
         });
 
       expect(response.status).toBe(200);
@@ -48,6 +51,15 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
       });
       // Verifica que a senha nunca é vazada no response
       expect(response.body.user).not.toHaveProperty('password');
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: expect.objectContaining({
+          termsVersion: '1.0',
+          privacyVersion: '1.0',
+          termsAcceptedAt: expect.any(Date),
+          privacyAcceptedAt: expect.any(Date),
+        }),
+      });
     });
 
     it('CT-AUT-02: Deve injetar cookie seguro authToken com atributos HttpOnly na resposta do login', async () => {
@@ -56,6 +68,8 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
         .send({
           email: 'denunciante@sos.com',
           password: 'senha123',
+          acceptedTerms: true,
+          acceptedPrivacy: true,
         });
 
       expect(response.status).toBe(200);
@@ -72,6 +86,8 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
         .send({
           email: 'gestor@sos.com',
           password: 'senha123',
+          acceptedTerms: true,
+          acceptedPrivacy: true,
         });
 
       expect(response.status).toBe(200);
@@ -116,6 +132,15 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
+    });
+
+    it('CT-AUT-13: Deve exigir aceite explícito dos dois documentos no login', async () => {
+      const response = await request(app)
+        .post('/auth/login')
+        .send({ email: 'denunciante@sos.com', password: 'senha123', acceptedTerms: true });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('aceitar os Termos de Uso e a Política de Privacidade');
     });
   });
 
