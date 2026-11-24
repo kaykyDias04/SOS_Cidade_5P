@@ -90,7 +90,15 @@
     "TDD-01a",
     "TDD-01b",
     "TDD-02a",
-    "TDD-02b"
+    "TDD-02b",
+    "CT-DEN-21",
+    "CT-DEN-22",
+    "CT-DEN-23",
+    "CT-DEN-24",
+    "UN-SITUACAO-01",
+    "UN-SITUACAO-02",
+    "UN-SITUACAO-03",
+    "UN-SITUACAO-04"
   ],
   "criticalFiles": [
     "e2e/tests/fluxo-denuncia-cidadao.spec.ts",

@@ -1,6 +1,7 @@
 import { DenunciaRepository } from '../repositories/denuncia.repository';
 import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis';
 import { encrypt, decrypt } from '../lib/crypto';
+import { validarTransicao, DenunciaNaoEncontradaError } from './situacao';
 
 export class DenunciaService {
   private denunciaRepository = new DenunciaRepository();
@@ -96,6 +97,13 @@ export class DenunciaService {
   }
 
   async updateDenuncia(id: number, data: any) {
+    // Mudança de situação passa pela máquina de estados antes de gravar.
+    if (data.situacao !== undefined) {
+      const atual = await this.denunciaRepository.findById(id);
+      if (!atual) throw new DenunciaNaoEncontradaError();
+      validarTransicao(atual.situacao, data.situacao);
+    }
+
     const updateData = { ...data };
     if (updateData.imagens && Array.isArray(updateData.imagens)) {
       updateData.imagens = JSON.stringify(updateData.imagens);

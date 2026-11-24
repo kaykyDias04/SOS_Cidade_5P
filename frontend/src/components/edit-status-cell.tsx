@@ -72,13 +72,14 @@ export const EditStatusCell = ({ row, table }: { row: Row<DenunciaRow>; table?: 
         <DropdownMenuContent align="end">
           <DropdownMenuItem
             onClick={() => handleSelectNovaSituacao("Em andamento")}
-            disabled={row.original.situacao.toLowerCase() === "em andamento"}
+            // Finalizada não volta para Em andamento: o backend recusa com 409.
+            disabled={["em andamento", "finalizada", "resolvido"].includes(row.original.situacao.toLowerCase())}
           >
             Em andamento
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleSelectNovaSituacao("Finalizada")}
-            disabled={row.original.situacao.toLowerCase() === "finalizada"}
+            disabled={["finalizada", "resolvido"].includes(row.original.situacao.toLowerCase())}
           >
             Finalizada
           </DropdownMenuItem>

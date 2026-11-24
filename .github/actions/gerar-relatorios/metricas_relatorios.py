@@ -344,6 +344,22 @@ def gerar_relatorio_negocio_html(m_xml, m_backlog, m_pipe, semaforo, caminho_sai
     os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
     data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
+    # O resumo de riscos segue o semáforo calculado, em vez de texto fixo.
+    if m_backlog["pendentes"]:
+        resumo_riscos = (
+            f"<li><strong>Risco Conhecido Mapeado:</strong> casos prioritários ainda sem automação: "
+            f"{', '.join(m_backlog['pendentes'])}. A limitação está registrada no plano de testes.</li>"
+            "<li><strong>Recomendação de Release:</strong> a versão é estável para homologação; "
+            "a squad deve priorizar as pendências acima para elevar o indicador a <em>Verde</em>.</li>"
+        )
+    else:
+        resumo_riscos = (
+            "<li><strong>Riscos do Backlog:</strong> todos os casos prioritários da modelagem de risco estão "
+            "automatizados, incluindo a recusa de transições inválidas de situação (máquina de estados no backend).</li>"
+            f"<li><strong>Recomendação de Release:</strong> semáforo <em>{semaforo['status'].capitalize()}</em>; "
+            "a liberação depende só do resultado dos testes desta execução.</li>"
+        )
+
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -410,8 +426,7 @@ def gerar_relatorio_negocio_html(m_xml, m_backlog, m_pipe, semaforo, caminho_sai
             <h3>🧭 Resumo Executivo para Gestão do Produto</h3>
             <ul>
                 <li><strong>Garantia dos Fluxos Vitais:</strong> Os fluxos essenciais de abertura de denúncia, anonimização de dados pessoais, separação entre Cidadão e Gestor e histórico de ocorrências estão 100% automatizados e validados a cada integração.</li>
-                <li><strong>Risco Conhecido Mapeado:</strong> O status <em>Amarelo</em> decorre da ausência de máquina de estados no backend para impedir transições inválidas de status (ex: reabrir denúncia já finalizada). Essa limitação está formalmente registrada e com mitigação manual.</li>
-                <li><strong>Recomendação de Release:</strong> A versão atual é estável para homologação, devendo a squad priorizar a máquina de estados de status na próxima sprint para elevar o indicador a <em>Verde</em>.</li>
+                {resumo_riscos}
             </ul>
         </div>
     </div>
