@@ -22,6 +22,7 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
 
   beforeEach(() => {
     resetMockDb();
+    jest.clearAllMocks();
   });
 
   describe('POST /users - Criação de Novos Usuários', () => {
@@ -30,6 +31,8 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
         email: 'novo.cidadao@recife.pe.gov.br',
         name: 'Novo Cidadão',
         password: 'senha_segura_123',
+        acceptedTerms: true,
+        acceptedPrivacy: true,
       };
 
       const response = await request(app)
@@ -42,6 +45,11 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
       expect(response.body.name).toBe(payload.name);
       expect(response.body.role).toBe('DENUNCIANTE');
       expect(response.body).not.toHaveProperty('password');
+      const saved = mockPrisma.user.create.mock.calls[0][0].data;
+      expect(saved.termsAcceptedAt).toBeInstanceOf(Date);
+      expect(saved.privacyAcceptedAt).toBeInstanceOf(Date);
+      expect(saved.termsVersion).toBe('1.0');
+      expect(saved.privacyVersion).toBe('1.0');
     });
 
     it('CT-USR-02: Deve ignorar o perfil GESTOR pedido no cadastro público e criar DENUNCIANTE', async () => {
@@ -50,6 +58,8 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
         name: 'Coordenador de Zeladoria',
         password: 'gestor_forte_2026',
         role: 'GESTOR',
+        acceptedTerms: true,
+        acceptedPrivacy: true,
       };
 
       const response = await request(app)
@@ -66,6 +76,8 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
         email: 'denunciante@sos.com',
         name: 'Usuário Duplicado',
         password: 'senha123',
+        acceptedTerms: true,
+        acceptedPrivacy: true,
       };
 
       const response = await request(app)
@@ -77,6 +89,19 @@ describe('SUT API Tests - Módulo 03: Gestão de Usuários (/users)', () => {
         success: false,
         error: 'Este email já está cadastrado.',
       });
+    });
+
+    it('CT-USR-13: Deve rejeitar cadastro sem aceite explícito dos documentos', async () => {
+      const response = await request(app)
+        .post('/users')
+        .send({
+          email: 'sem.consentimento@sos.com',
+          name: 'Sem Consentimento',
+          password: 'senha123',
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('aceitar os Termos de Uso e a Política de Privacidade');
     });
   });
 

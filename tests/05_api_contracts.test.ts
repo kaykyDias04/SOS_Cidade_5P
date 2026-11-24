@@ -33,6 +33,8 @@ describe('SUT API Tests - Módulo 05: Contratos de Dados e Conformidade Swagger/
           name: 'Teste de Contrato User',
           password: 'password123',
           role: 'DENUNCIANTE',
+          acceptedTerms: true,
+          acceptedPrivacy: true,
         });
 
       expect(response.status).toBe(200);

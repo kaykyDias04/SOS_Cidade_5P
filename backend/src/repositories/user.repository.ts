@@ -23,6 +23,19 @@ export class UserRepository {
     return prisma.user.create({ data });
   }
 
+  async recordLegalAcceptance(id: number, version: string) {
+    const acceptedAt = new Date();
+    return prisma.user.update({
+      where: { id },
+      data: {
+        termsAcceptedAt: acceptedAt,
+        privacyAcceptedAt: acceptedAt,
+        termsVersion: version,
+        privacyVersion: version,
+      },
+    });
+  }
+
   async delete(id: number) {
     return prisma.user.delete({ where: { id } });
   }

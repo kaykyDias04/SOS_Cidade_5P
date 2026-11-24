@@ -1,19 +1,34 @@
 import { prisma } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 
+export interface DenunciaFiltros {
+  tipoDenuncia?: string;
+  bairroOcorrencia?: string;
+  situacao?: string;
+}
+
+function buildWhere(userId?: number, filtros: DenunciaFiltros = {}): Prisma.DenunciaWhereInput {
+  return {
+    ...(userId === undefined ? {} : { userId }),
+    ...(filtros.tipoDenuncia === undefined ? {} : { tipoDenuncia: filtros.tipoDenuncia }),
+    ...(filtros.bairroOcorrencia === undefined ? {} : { bairroOcorrencia: filtros.bairroOcorrencia }),
+    ...(filtros.situacao === undefined ? {} : { situacao: filtros.situacao }),
+  };
+}
+
 export class DenunciaRepository {
-  async findAll(skip: number, take: number, userId?: number) {
+  async findAll(skip: number, take: number, userId?: number, filtros: DenunciaFiltros = {}) {
     return prisma.denuncia.findMany({
-      where: userId === undefined ? undefined : { userId },
+      where: buildWhere(userId, filtros),
       skip,
       take,
       orderBy: { createdAt: 'desc' }
     });
   }
 
-  async count(userId?: number) {
+  async count(userId?: number, filtros: DenunciaFiltros = {}) {
     return prisma.denuncia.count({
-      where: userId === undefined ? undefined : { userId }
+      where: buildWhere(userId, filtros)
     });
   }
 

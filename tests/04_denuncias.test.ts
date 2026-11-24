@@ -55,7 +55,7 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       expect(response.body.protocolo).toMatch(/^SOS-\d{4}-[A-Z0-9]{8}$/);
     });
 
-    it('CT-DEN-02: Deve registrar denúncia anônima ocultando a identidade com nome Anônimo', async () => {
+    it('CT-DEN-02: Deve registrar denúncia anônima sem persistir nem devolver vínculo de identidade', async () => {
       const payload = {
         tipoDenuncia: 'Foco de Dengue / Entulho',
         identificacao: false,
@@ -72,6 +72,7 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       expect(response.status).toBe(200);
       expect(response.body.identificacao).toBe(false);
       expect(response.body.nomeDenunciante).toBe('Anônimo');
+      expect(response.body).not.toHaveProperty('userId');
     });
 
     it('CT-DEN-03: Deve aceitar imagens em base64 e retornar o campo desserializado como array', async () => {
@@ -154,7 +155,7 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
 
       expect(response.status).toBe(200);
       expect(response.body.data[0].id).toBe(999);
-      expect(mockRedisMethods.redisGet).toHaveBeenCalledWith('denuncias:all:1:50');
+      expect(mockRedisMethods.redisGet).toHaveBeenCalledWith('denuncias:v2:all:1:50');
     });
 
     it('CT-DEN-08: Deve rejeitar listagem sem token e retornar status 401', async () => {
@@ -193,6 +194,16 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       const response = await request(app).get('/denuncias/1');
 
       expect(response.status).toBe(401);
+    });
+
+    it('CT-DEN-21: Deve ocultar detalhes de denúncia de outro cidadão', async () => {
+      const tokenOutroCidadao = generateDenuncianteToken({ id: 50, email: 'outro@sos.com' });
+      const response = await request(app)
+        .get('/denuncias/1')
+        .set('Authorization', getBearerHeader(tokenOutroCidadao));
+
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual({ success: false, error: 'Not found' });
     });
   });
 
@@ -301,7 +312,8 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
 
       expect(minhas.status).toBe(200);
       expect(minhas.body.meta.total).toBe(3);
-      expect(minhas.body.data.map((d: any) => d.userId)).toEqual([1, 1, 1]);
+      expect(minhas.body.data.filter((d: any) => d.identificacao).map((d: any) => d.userId)).toEqual([1, 1]);
+      expect(minhas.body.data.find((d: any) => !d.identificacao)).not.toHaveProperty('userId');
       expect(minhas.body.data.some((d: any) => d.nomeDenunciante === 'Anônimo')).toBe(true);
 
       const doOutro = await request(app)

@@ -15,6 +15,10 @@ model User {
   name      String
   password  String
   role      String     @default("DENUNCIANTE")
+  termsAcceptedAt   DateTime?
+  privacyAcceptedAt DateTime?
+  termsVersion      String?
+  privacyVersion    String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   denuncias Denuncia[]
