@@ -14,7 +14,6 @@ import { useDenunciasStore } from "@/src/store/useDenunciasStore";
 import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Checkbox } from "@/src/components/ui/checkbox";
-import { Switch } from "@/src/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -25,7 +24,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -173,7 +171,7 @@ export function FormDenuncias() {
       const denunciaData = {
         tipoDenuncia: tipoLabels[dataToSubmit.tipoDenuncia] || dataToSubmit.tipoDenuncia,
         identificacao: !dataToSubmit.isAnonima,
-        nomeDenunciante: !dataToSubmit.isAnonima ? "Anônimo" : (user?.name || "Anônimo"),
+        nomeDenunciante: !dataToSubmit.isAnonima ? (user?.name || "Anônimo") : "Anônimo",
         userId: user?.id,
         bairroOcorrencia: dataToSubmit.bairro,
         descricaoOcorrencia: dataToSubmit.descricao,
@@ -280,22 +278,56 @@ export function FormDenuncias() {
               name="isAnonima"
               render={({ field }) => (
                 <FormItem className="w-full">
-                  <div className="flex flex-row items-center justify-between rounded-lg border p-3 bg-gray-50/50">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-sm">Denúncia Anônima</FormLabel>
-                      <FormDescription className="text-xs">
-                        {field.value
-                          ? "Sua identidade não será revelada."
-                          : "Sua denúncia será identificada com seu nome."}
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        className="cursor-pointer"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
+                  <FormLabel className="text-sm">Como deseja registrar?</FormLabel>
+                  <div role="radiogroup" aria-label="Identificação da denúncia" className="space-y-2">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={field.value}
+                      onClick={() => field.onChange(true)}
+                      className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left ${
+                        field.value ? "border-sky-700 bg-sky-50" : "border-stone-200 bg-gray-50/50"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${
+                          field.value ? "border-sky-700" : "border-stone-400"
+                        }`}
+                      >
+                        {field.value && <span className="size-2.5 rounded-full bg-sky-700" />}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-medium">Denunciar anonimamente</span>
+                        <span className="mt-1 block text-xs text-stone-600">
+                          Pré-selecionado. Gestores não verão seu nome; o vínculo interno com sua conta é mantido para acompanhamento.
+                        </span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={!field.value}
+                      onClick={() => field.onChange(false)}
+                      className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left ${
+                        !field.value ? "border-sky-700 bg-sky-50" : "border-stone-200 bg-gray-50/50"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${
+                          !field.value ? "border-sky-700" : "border-stone-400"
+                        }`}
+                      >
+                        {!field.value && <span className="size-2.5 rounded-full bg-sky-700" />}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-medium">Identificar-me</span>
+                        <span className="mt-1 block text-xs text-stone-600">
+                          Seu nome será associado à denúncia.
+                        </span>
+                      </span>
+                    </button>
                   </div>
                   <FormMessage className="text-xs" />
                 </FormItem>

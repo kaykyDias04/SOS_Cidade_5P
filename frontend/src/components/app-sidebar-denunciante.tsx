@@ -34,14 +34,6 @@ export function AppSidebarDenunciante() {
 
   const denunciasRecentes = useMemo(() => {
     return (denuncias || [])
-      .filter((d) => {
-
-        if (user?.id && (d as any).userId) {
-          return (d as any).userId === user.id;
-        }
-
-        return d.nomeDenunciante === user?.name;
-      })
       .slice(0, 2)
       .map((d) => ({
         id: d.protocolo,
@@ -49,7 +41,7 @@ export function AppSidebarDenunciante() {
         status: d.situacao,
         statusColor: getStatusColor(d.situacao),
       }));
-  }, [denuncias, user]);
+  }, [denuncias]);
 
   return (
     <Sidebar className="bg-stone-100 p-6 flex flex-col">

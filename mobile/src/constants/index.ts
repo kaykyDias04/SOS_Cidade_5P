@@ -1,4 +1,9 @@
 export {
+  API_BASE_URL,
+  AUTH_TOKEN_KEY,
+  USER_ROLE_KEY,
+} from './config';
+export {
   BAIRROS_RECIFE,
   BAIRRO_COORDS,
   DEFAULT_COORDS,

@@ -40,14 +40,7 @@ export default function MinhasDenunciasPage() {
         }
       }
 
-      const filtered = allData
-        .filter((d) => {
-          if (user.id && d.userId) {
-            return String(d.userId) === String(user.id);
-          }
-          return d.nomeDenunciante === user.name;
-        })
-        .map((d) => ({
+      const filtered = allData.map((d) => ({
           id: d.id,
           tipoDenuncia: d.tipoDenuncia,
           identificacao: d.identificacao,

@@ -9,11 +9,15 @@ import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { usersAPI } from "@/src/lib/api";
 import { useState } from "react";
+import { ConsentAgreement } from "@/src/components/consent-agreement";
 
 const registerSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter no mínimo 2 caracteres." }),
   email: z.string().email({ message: "Por favor, insira um email válido." }),
   password: z.string().min(6, { message: "A senha deve ter no mínimo 6 caracteres." }),
+  acceptedLegal: z.boolean().refine((value) => value, {
+    message: "Confirme a leitura e aceite os documentos para continuar.",
+  }),
 });
 
 export const RegisterForm = () => {
@@ -21,7 +25,7 @@ export const RegisterForm = () => {
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "" },
+    defaultValues: { name: "", email: "", password: "", acceptedLegal: false },
   });
 
   const onRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
@@ -32,6 +36,8 @@ export const RegisterForm = () => {
         email: data.email,
         password: data.password,
         role: "DENUNCIANTE",
+        acceptedTerms: data.acceptedLegal,
+        acceptedPrivacy: data.acceptedLegal,
       });
 
       if (result.success) {
@@ -80,6 +86,19 @@ export const RegisterForm = () => {
                   <Input className="bg-stone-100 h-12" placeholder="seu.email@mail.com" {...field} />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="acceptedLegal"
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <ConsentAgreement
+                  checked={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
               </FormItem>
             )}
           />

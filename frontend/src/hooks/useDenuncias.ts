@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { denunciasAPI, Denuncia, PaginatedResponse } from '@/src/lib/api';
 import { useDenunciasStore } from '@/src/store/useDenunciasStore';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 export interface UseDenunciasReturn {
   denuncias: Denuncia[];
@@ -18,6 +19,7 @@ export function useDenuncias(
   initialLimit = 50
 ): UseDenunciasReturn {
   const store = useDenunciasStore();
+  const role = useAuthStore((state) => state.user?.role);
 
   useEffect(() => {
     if (store.page !== initialPage) {
@@ -26,7 +28,7 @@ export function useDenuncias(
       store.fetchDenuncias();
     }
   
-  }, [initialPage, initialLimit]);
+  }, [initialPage, initialLimit, role]);
 
   return {
     denuncias: store.denuncias,
