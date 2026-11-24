@@ -7,6 +7,7 @@ import { test, expect } from '@playwright/test';
 test('CT-E2E-01: cidadão se cadastra, registra uma denúncia e a encontra em Minhas Denúncias @smoke', async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const timestamp = Date.now();
   const nome = 'Gabriel Teste E2E';
   const email = `gabriel.e2e.${timestamp}@teste.com`;
@@ -16,10 +17,14 @@ test('CT-E2E-01: cidadão se cadastra, registra uma denúncia e a encontra em Mi
 
   // 1. Cadastro
   await page.goto('/login');
+  await page.waitForLoadState('networkidle');
 
   await page.getByLabel('Nome Completo').fill(nome);
   await page.getByLabel('Email').nth(1).fill(email);
   await page.getByLabel('Senha').nth(1).fill(senha);
+  await page.getByRole('checkbox', {
+    name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+  }).last().check();
   await page.getByRole('button', { name: 'Cadastrar' }).click();
 
   await expect(
@@ -27,11 +32,15 @@ test('CT-E2E-01: cidadão se cadastra, registra uma denúncia e a encontra em Mi
   ).toBeVisible();
 
   // 2. Login
+  await page.waitForLoadState('networkidle');
   await page.getByLabel('Email').first().fill(email);
   await page.getByLabel('Senha').first().fill(senha);
+  await page.getByRole('checkbox', {
+    name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+  }).first().check();
   await page.getByRole('button', { name: 'Entrar' }).click();
 
-  await page.waitForURL('**/homepage-denunciante');
+  await page.waitForURL('**/homepage-denunciante', { timeout: 45_000 });
 
   // 3. Nova denúncia
   await page.goto('/nova-denuncia');
@@ -72,7 +81,7 @@ test('CT-E2E-01: cidadão se cadastra, registra uma denúncia e a encontra em Mi
 
   // Fecha o modal de confirmação
   await page.keyboard.press('Escape');
-  await page.waitForURL('**/homepage-denunciante');
+  await page.waitForURL('**/homepage-denunciante', { timeout: 45_000 });
 
   // 4. Verifica no histórico do cidadão
   await page.goto('/minhas-denuncias');

@@ -11,15 +11,21 @@ import { API_URL, gestorSeed } from './fixtures/testData';
  */
 
 test.describe('Jornada do Gestor: login e acesso ao painel', () => {
+  test.describe.configure({ timeout: 60_000 });
+
   test('CT-E2E-02: deve logar como gestor e acessar o Dashboard Interativo @smoke', async ({ page }) => {
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
 
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
     await loginForm.getByLabel('Email').fill(gestorSeed.email);
     await loginForm.getByLabel('Senha').fill(gestorSeed.password);
+    await loginForm.getByRole('checkbox', {
+      name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+    }).check();
     await loginForm.getByRole('button', { name: 'Entrar' }).click();
 
-    await expect(page).toHaveURL(/\/dashboard/);
+    await page.waitForURL('**/dashboard', { timeout: 45_000 });
     await expect(page.getByRole('heading', { name: 'Dashboard Interativo' })).toBeVisible();
   });
 
@@ -27,16 +33,26 @@ test.describe('Jornada do Gestor: login e acesso ao painel', () => {
     // usa o próprio cadastro público (sempre cria DENUNCIANTE)
     const denuncianteEmail = `denunciante.e2e.${Date.now()}@sos.com`;
     const cadastro = await request.post(`${API_URL}/users`, {
-      data: { name: 'Denunciante Teste', email: denuncianteEmail, password: 'senha123' },
+      data: {
+        name: 'Denunciante Teste',
+        email: denuncianteEmail,
+        password: 'senha123',
+        acceptedTerms: true,
+        acceptedPrivacy: true,
+      },
     });
     expect(cadastro.ok()).toBeTruthy();
 
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
     await loginForm.getByLabel('Email').fill(denuncianteEmail);
     await loginForm.getByLabel('Senha').fill('senha123');
+    await loginForm.getByRole('checkbox', {
+      name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+    }).check();
     await loginForm.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/homepage-denunciante/);
+    await page.waitForURL('**/homepage-denunciante', { timeout: 45_000 });
 
     // tenta acessar a página do gestor diretamente pela URL
     await page.goto('/dashboard');

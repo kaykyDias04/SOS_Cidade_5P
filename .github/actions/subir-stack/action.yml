@@ -16,6 +16,7 @@ runs:
           backend/package-lock.json
           frontend/package-lock.json
           e2e/package-lock.json
+          mobile/package-lock.json
 
     - name: Gerar chaves de teste
       shell: bash

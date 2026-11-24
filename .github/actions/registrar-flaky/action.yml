@@ -1,0 +1,102 @@
+name: Registrar testes instáveis
+description: Abre ou atualiza issues para testes E2E que passaram após uma nova tentativa.
+
+inputs:
+  arquivo:
+    description: Caminho do JSON gerado pelo flaky reporter.
+    required: false
+    default: resultados/flaky-e2e.json
+
+runs:
+  using: composite
+  steps:
+    - name: Registrar testes instáveis
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        INPUT_ARQUIVO: ${{ inputs.arquivo }}
+      run: |
+        set -uo pipefail
+
+        arquivo="${INPUT_ARQUIVO:-resultados/flaky-e2e.json}"
+        total=0
+        criadas=0
+        comentadas=0
+        falhas=0
+        detalhes=""
+
+        adicionar_detalhe() {
+          local detalhe
+          printf -v detalhe "$1" "${@:2}"
+          detalhes+=$'\n'"$detalhe"
+        }
+
+        if ! command -v jq >/dev/null 2>&1; then
+          falhas=1
+          detalhes="Não foi possível registrar: jq não está instalado."
+        elif [ ! -f "$arquivo" ]; then
+          detalhes="Arquivo não encontrado: \`$arquivo\`."
+        elif ! jq -e 'type == "array"' "$arquivo" >/dev/null 2>&1; then
+          falhas=1
+          detalhes="JSON inválido ou fora do formato esperado: \`$arquivo\`."
+        else
+          while IFS= read -r item; do
+            total=$((total + 1))
+            titulo="$(jq -r '.titulo // ""' <<< "$item")"
+            arquivo_teste="$(jq -r '.arquivo // ""' <<< "$item")"
+            tentativas="$(jq -r '.tentativas // 0' <<< "$item")"
+            erro="$(jq -r '.erro // ""' <<< "$item")"
+
+            if [ -z "$titulo" ]; then
+              falhas=$((falhas + 1))
+              adicionar_detalhe '- Item %s: campo titulo ausente; ignorado.' "$total"
+              continue
+            fi
+
+            titulo_issue="Teste instável: ${titulo}"
+            printf -v corpo 'Teste E2E instável: falhou e passou após nova tentativa.\n\n- Arquivo: `%s`\n- Tentativas: %s\n- Erro na primeira tentativa: %s\n' \
+              "$arquivo_teste" "$tentativas" "$erro"
+
+            if ! lista="$(gh issue list --repo "$GH_REPO" --state open --limit 1000 --json number,title 2>&1)"; then
+              falhas=$((falhas + 1))
+              adicionar_detalhe '- Falha ao consultar issues para `%s`.' "$titulo_issue"
+              continue
+            fi
+
+            numero="$(jq -r --arg titulo "$titulo_issue" '.[] | select(.title == $titulo) | .number' <<< "$lista" | head -n 1)"
+            if [ -n "$numero" ]; then
+              if gh issue comment "$numero" --repo "$GH_REPO" --body "$corpo" >/dev/null 2>&1; then
+                comentadas=$((comentadas + 1))
+                adicionar_detalhe '- Comentário adicionado à issue #%s: `%s`.' "$numero" "$titulo_issue"
+              else
+                falhas=$((falhas + 1))
+                adicionar_detalhe '- Falha ao comentar na issue #%s: `%s`.' "$numero" "$titulo_issue"
+              fi
+            elif gh issue create --repo "$GH_REPO" --title "$titulo_issue" --label flaky --body "$corpo" >/dev/null 2>&1; then
+              criadas=$((criadas + 1))
+              adicionar_detalhe '- Issue criada: `%s`.' "$titulo_issue"
+            else
+              falhas=$((falhas + 1))
+              adicionar_detalhe '- Falha ao criar issue: `%s`.' "$titulo_issue"
+            fi
+          done < <(jq -c '.[]' "$arquivo")
+        fi
+
+        {
+          echo "## Registro de testes instáveis"
+          echo
+          echo "- Encontrados: ${total}"
+          echo "- Issues criadas: ${criadas}"
+          echo "- Comentários adicionados: ${comentadas}"
+          echo "- Falhas de registro: ${falhas}"
+          if [ -n "$detalhes" ]; then
+            echo
+            printf '%s\n' "$detalhes"
+          elif [ "$total" -eq 0 ]; then
+            echo
+            echo "Nenhum teste instável encontrado."
+          fi
+        } >> "${GITHUB_STEP_SUMMARY:-/dev/null}" 2>/dev/null || true
+
+        exit 0
