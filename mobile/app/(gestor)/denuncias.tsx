@@ -275,12 +275,14 @@ export default function DenunciasGestorScreen() {
                   {SITUACOES.map((s) => {
                     const cfg = getSit(s);
                     const current = selectedDenuncia.situacao === s;
+                    // Estado final não muda mais: o backend recusa com 409.
+                    const encerrada = ['finalizada', 'resolvido'].includes(selectedDenuncia.situacao.toLowerCase());
                     return (
                       <TouchableOpacity
                         key={s}
                         style={[styles.statusBtn, current && styles.statusBtnActive, { borderColor: cfg.text }]}
                         onPress={() => handleUpdateStatus(s)}
-                        disabled={current || updatingStatus}
+                        disabled={current || encerrada || updatingStatus}
                         accessibilityLabel={`Marcar como ${cfg.label}`}
                       >
                         {updatingStatus && current

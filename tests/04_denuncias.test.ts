@@ -224,6 +224,53 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       expect(mockPrisma.denuncia.update).toHaveBeenCalledWith({ where: { id: 1 }, data: { situacao: 'Finalizada' } });
     });
 
+    // R2-CT-53 a R2-CT-55 do plano (HU-13 adaptada): transições proibidas de situação.
+    it('CT-DEN-21: R2-CT-53 deve recusar com 409 voltar uma denúncia Finalizada para Em Andamento', async () => {
+      const response = await request(app)
+        .patch('/denuncias/2') // fixture 2 já está Finalizada
+        .set('Authorization', getBearerHeader(tokenGestor))
+        .send({ situacao: 'Em Andamento' });
+
+      expect(response.status).toBe(409);
+      expect(response.body.code).toBe('INVALID_STATUS_TRANSITION');
+      expect(mockPrisma.denuncia.update).not.toHaveBeenCalled();
+
+      const depois = await request(app).get('/denuncias/2').set('Authorization', getBearerHeader(tokenGestor));
+      expect(depois.body.situacao).toBe('Finalizada');
+    });
+
+    it('CT-DEN-22: R2-CT-54 deve recusar com 409 repetir a situação atual da denúncia', async () => {
+      const response = await request(app)
+        .patch('/denuncias/1') // fixture 1 está Em Andamento
+        .set('Authorization', getBearerHeader(tokenGestor))
+        .send({ situacao: 'Em Andamento' });
+
+      expect(response.status).toBe(409);
+      expect(response.body.code).toBe('INVALID_STATUS_TRANSITION');
+      expect(mockPrisma.denuncia.update).not.toHaveBeenCalled();
+    });
+
+    it('CT-DEN-23: R2-CT-55 deve recusar com 409 uma situação fora do fluxo, sem gravar', async () => {
+      const response = await request(app)
+        .patch('/denuncias/1')
+        .set('Authorization', getBearerHeader(tokenGestor))
+        .send({ situacao: 'Cancelada' });
+
+      expect(response.status).toBe(409);
+      expect(response.body.code).toBe('INVALID_STATUS_TRANSITION');
+      expect(mockPrisma.denuncia.update).not.toHaveBeenCalled();
+    });
+
+    it('CT-DEN-24: Deve responder 404 ao alterar a situação de denúncia inexistente', async () => {
+      const response = await request(app)
+        .patch('/denuncias/999')
+        .set('Authorization', getBearerHeader(tokenGestor))
+        .send({ situacao: 'Finalizada' });
+
+      expect(response.status).toBe(404);
+      expect(mockPrisma.denuncia.update).not.toHaveBeenCalled();
+    });
+
     it('CT-DEN-14: Deve rejeitar atualização sem autenticação com status 401', async () => {
       const response = await request(app)
         .patch('/denuncias/1')

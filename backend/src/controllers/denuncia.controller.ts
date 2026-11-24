@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { DenunciaService } from '../services/denuncia.service';
+import { TransicaoInvalidaError, DenunciaNaoEncontradaError } from '../services/situacao';
 
 export class DenunciaController {
   private denunciaService = new DenunciaService();
@@ -56,6 +57,10 @@ export class DenunciaController {
       const denuncia = await this.denunciaService.updateDenuncia(id, { situacao });
       res.json(denuncia);
     } catch (error) {
+      // Transição recusada (409) ou denúncia inexistente (404) não são erro do servidor.
+      if (error instanceof TransicaoInvalidaError || error instanceof DenunciaNaoEncontradaError) {
+        return res.status(error.status).json({ success: false, error: error.message, code: error.code });
+      }
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   }
