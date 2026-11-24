@@ -13,7 +13,10 @@
       "resizeMode": "contain"
     },
     "updates": {
-      "enabled": false
+      "enabled": true,
+      "url": "https://u.expo.dev/114df36c-08b7-4bc9-8bc1-f954ef5f52c4",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "ios": {
       "supportsTablet": true,
@@ -73,6 +76,9 @@
       "eas": {
         "projectId": "114df36c-08b7-4bc9-8bc1-f954ef5f52c4"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

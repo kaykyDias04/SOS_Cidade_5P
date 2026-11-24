@@ -4,6 +4,7 @@ export type {
   AuthLoginResponse,
   AuthLogoutResponse,
   AuthUser,
+  CreateUserInput,
   User,
   UserRole,
 } from './user';
