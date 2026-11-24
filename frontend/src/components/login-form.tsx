@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Form,
@@ -17,22 +16,25 @@ import {
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { useAuthStore } from "@/src/store/useAuthStore";
+import { ConsentAgreement } from "@/src/components/consent-agreement";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor, insira um email válido." }),
   password: z
     .string()
     .min(6, { message: "A senha deve ter no mínimo 6 caracteres." }),
+  acceptedLegal: z.boolean().refine((value) => value, {
+    message: "Confirme a leitura e aceite os documentos para continuar.",
+  }),
 });
 
 export const LoginForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "", password: "", acceptedLegal: false },
   });
 
   const { login } = useAuthStore();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
@@ -40,16 +42,13 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, data.acceptedLegal);
 
       if (result.success) {
         toast.success("Login realizado com sucesso! Bem-vindo de volta.");
 
-        if (result.role === 'GESTOR') {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/homepage-denunciante");
-        }
+        const destination = result.role === 'GESTOR' ? '/dashboard' : '/homepage-denunciante';
+        window.location.replace(destination);
       } else {
         const errorMsg = result.error || "";
         if (errorMsg.toLowerCase().includes("invalid credentials") || errorMsg.toLowerCase().includes("invalid login credentials")) {
@@ -84,6 +83,19 @@ export const LoginForm = () => {
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="acceptedLegal"
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <ConsentAgreement
+                  checked={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
               </FormItem>
             )}
           />

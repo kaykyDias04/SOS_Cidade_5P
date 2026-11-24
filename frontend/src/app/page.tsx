@@ -107,7 +107,7 @@ export default function LandingPage() {
                   Sua identidade está protegida
                 </h2>
                 <p className="font-medium text-black text-sm leading-snug">
-                  O sistema garante o anonimato ou o sigilo dos seus dados, em total conformidade com a LGPD. Sua segurança é nossa total prioridade
+                  Denúncias anônimas não exibem seu nome para gestores, mas permanecem vinculadas à sua conta para acompanhamento. Consulte a Política de Privacidade antes de enviar.
                 </p>
               </div>
             </div>

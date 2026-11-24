@@ -63,7 +63,7 @@ export async function apiCall<T>(
 }
 
 export const authAPI = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, acceptedLegal: boolean) => {
     return apiCall<{
       user: {
         id: number;
@@ -74,7 +74,12 @@ export const authAPI = {
       token: string;
     }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email,
+        password,
+        acceptedTerms: acceptedLegal,
+        acceptedPrivacy: acceptedLegal,
+      }),
     });
   },
   logout: async () => {
@@ -155,6 +160,8 @@ export const usersAPI = {
     name: string;
     password: string;
     role: string;
+    acceptedTerms?: boolean;
+    acceptedPrivacy?: boolean;
   }) => {
     return apiCall<User>('/users', {
       method: 'POST',

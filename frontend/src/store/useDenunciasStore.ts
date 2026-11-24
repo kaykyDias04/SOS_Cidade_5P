@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { denunciasAPI, Denuncia, PaginatedResponse } from '@/src/lib/api';
+import { useAuthStore } from '@/src/store/useAuthStore';
 
 interface DenunciasState {
   denuncias: Denuncia[];
@@ -32,7 +33,10 @@ export const useDenunciasStore = create<DenunciasState>((set, get) => ({
     const { page, limit } = get();
     set({ loading: true, error: null });
     try {
-      const response = await denunciasAPI.list(page, limit);
+      const currentUser = useAuthStore.getState().user;
+      const response = currentUser?.role === 'DENUNCIANTE'
+        ? await denunciasAPI.listMinhas(page, limit)
+        : await denunciasAPI.list(page, limit);
 
       if (response.success && response.data) {
         const paginatedData = response.data as PaginatedResponse<Denuncia>;
