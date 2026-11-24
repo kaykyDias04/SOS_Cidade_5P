@@ -130,3 +130,11 @@ Em resposta ao feedback pedagógico sobre o fluxo **Registrar -> Acompanhar -> N
      - Cenário: `CT-E2E-08: Denunciante vê "Finalizada" em Minhas Denúncias depois que o Gestor finaliza a denúncia`
      - Funcionamento: Um contexto de browser do cidadão abre a denúncia ("Em andamento"); um segundo contexto isolado do gestor altera a situação para "Finalizada" via diálogo administrativo; o contexto do cidadão atualiza e comprova a transição de estado.
    - Dessa forma, o ciclo "Registrar -> Acompanhar -> Notificar" está formalmente comprovado no escopo Web pelo acompanhamento persistido, enquanto o push ativo fica devidamente circunscrito ao ecossistema Mobile nativo.
+
+## Criação inicial das labels
+
+Depois que `.github/workflows/criar-labels.yml` e `.github/scripts/criar-labels.sh`
+estiverem na `main`, abra **Actions → criar-labels → Run workflow**, selecione
+`main` e confirme **Run workflow**. O workflow também roda quando o script muda
+por push na `main`. O uso de `gh label create --force` permite repetir a execução
+com segurança; `falha-pipeline` continua sendo criada pela action de falha.

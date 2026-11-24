@@ -35,6 +35,17 @@ body:
       required: true
 
   - type: dropdown
+    id: suite
+    attributes:
+      label: Suíte afetada
+      options:
+        - "Backend e web (unit-api, e2e-smoke, regressão completa)"
+        - "Mobile (testes do app)"
+        - "Pipeline ou ambiente (vale para as duas)"
+    validations:
+      required: true
+
+  - type: dropdown
     id: flaky
     attributes:
       label: O teste é instável?
