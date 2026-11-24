@@ -2,7 +2,6 @@ import {
   View,
   Text,
   ScrollView,
-  Image,
   TouchableOpacity,
   Dimensions,
   StyleSheet,
@@ -14,9 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Logo from '@/components/Logo';
 import { getTipoIcon, TIPOS_DENUNCIA } from '@/constants';
+import Button from '@/components/ui/Button';
 
 const { width } = Dimensions.get('window');
-
 export default function WelcomeScreen() {
   const router = useRouter();
 
@@ -24,21 +23,19 @@ export default function WelcomeScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <ScrollView showsVerticalScrollIndicator={false}>
-
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Logo size={36} />
             <Text style={styles.logoText}>S.O.S Cidade</Text>
           </View>
-          <TouchableOpacity
-            style={styles.loginBtn}
+          <Button
+            title="ENTRAR"
             onPress={() => router.push('/login')}
             accessibilityLabel="Entrar"
-          >
-            <Text style={styles.loginBtnText}>ENTRAR</Text>
-          </TouchableOpacity>
+            style={styles.loginBtn}
+            textStyle={styles.loginBtnText}
+          />
         </View>
-
         <View style={styles.hero}>
           <View style={styles.heroOverlay}>
             <Text style={styles.heroTitle}>
@@ -47,16 +44,15 @@ export default function WelcomeScreen() {
             <Text style={styles.heroSubtitle}>
               Relate problemas do cotidiano urbano de forma rápida e segura
             </Text>
-            <TouchableOpacity
-              style={styles.ctaBtn}
+            <Button
+              title="FAÇA SUA DENÚNCIA AGORA"
               onPress={() => router.push('/login')}
               accessibilityLabel="Faça sua denúncia agora"
-            >
-              <Text style={styles.ctaBtnText}>FAÇA SUA DENÚNCIA AGORA</Text>
-            </TouchableOpacity>
+              style={styles.ctaBtn}
+              textStyle={styles.ctaBtnText}
+            />
           </View>
         </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Como Funciona</Text>
           <View style={styles.stepsRow}>
@@ -77,7 +73,6 @@ export default function WelcomeScreen() {
             ))}
           </View>
         </View>
-
         <View style={styles.privacyCard}>
           <View style={styles.privacyIcon}>
             <Ionicons name="lock-closed" size={36} color="#6498c9" />
@@ -85,11 +80,10 @@ export default function WelcomeScreen() {
           <View style={styles.privacyText}>
             <Text style={styles.privacyTitle}>Sua identidade está protegida</Text>
             <Text style={styles.privacyDesc}>
-              O sistema garante o anonimato ou o sigilo dos seus dados, em total conformidade com a LGPD.
+              Denúncias anônimas não exibem seu nome para gestores, mas permanecem vinculadas à sua conta para acompanhamento.
             </Text>
           </View>
         </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>O que você pode denunciar</Text>
           <View style={styles.grid}>
@@ -108,16 +102,13 @@ export default function WelcomeScreen() {
             ))}
           </View>
         </View>
-
         <View style={styles.footer}>
           <Text style={styles.footerText}>© 2025 S.O.S Cidade. Todos os direitos reservados.</Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -132,32 +123,25 @@ const styles = StyleSheet.create({
       elevation: 5,
     } : {})
   },
-
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#fff',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20,
+    paddingVertical: 14, backgroundColor: '#fff',
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   logoContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoBadge: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#6498c9',
-    alignItems: 'center', justifyContent: 'center',
-  },
   logoText: { fontSize: 20, fontWeight: '800', color: '#6498c9', letterSpacing: -0.5 },
   loginBtn: {
     borderWidth: 2, borderColor: '#6498c9', borderRadius: 8,
-    paddingHorizontal: 16, paddingVertical: 7,
+    paddingHorizontal: 16, paddingVertical: 7, height: undefined,
+    backgroundColor: 'transparent', marginTop: 0, shadowOpacity: 0, elevation: 0,
   },
-  loginBtnText: { color: '#6498c9', fontWeight: '700', fontSize: 12 },
-
+  loginBtnText: { color: '#6498c9', fontWeight: '700', fontSize: 12, letterSpacing: 0 },
   hero: {
-    height: 220, backgroundColor: '#6498c9',
-    justifyContent: 'center', alignItems: 'center',
+    height: 220, backgroundColor: '#6498c9', justifyContent: 'center', alignItems: 'center',
   },
   heroOverlay: {
     flex: 1, backgroundColor: 'rgba(20,40,80,0.55)',
-    justifyContent: 'center', alignItems: 'center',
-    padding: 24, width: '100%',
+    justifyContent: 'center', alignItems: 'center', padding: 24, width: '100%',
   },
   heroTitle: {
     color: '#fff', fontSize: 22, fontWeight: '800', textAlign: 'center',
@@ -168,25 +152,20 @@ const styles = StyleSheet.create({
   },
   ctaBtn: {
     backgroundColor: '#3b82f6', paddingHorizontal: 28, paddingVertical: 12,
-    borderRadius: 10, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8,
+    height: undefined, marginTop: 0, borderRadius: 10,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, elevation: 0,
   },
   ctaBtnText: { color: '#fff', fontWeight: '800', fontSize: 13, letterSpacing: 0.5 },
-
   section: { paddingHorizontal: 20, paddingVertical: 24 },
   sectionTitle: {
     fontSize: 18, fontWeight: '800', color: '#6498c9',
     marginBottom: 16, textAlign: 'center',
   },
-
   stepsRow: { flexDirection: 'column', gap: 16 },
   stepItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
-  stepIcon: {
-    width: 50, height: 50, borderRadius: 25, backgroundColor: '#EFF6FF',
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  },
+  stepIcon: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   stepLabel: { fontWeight: '800', color: '#1e3a5f', fontSize: 13, marginBottom: 3 },
   stepDesc: { color: '#4b5563', fontSize: 13, lineHeight: 19, flex: 1 },
-
   privacyCard: {
     marginHorizontal: 20, backgroundColor: '#fff', borderRadius: 20,
     padding: 20, flexDirection: 'row', alignItems: 'center', gap: 16,
@@ -200,7 +179,6 @@ const styles = StyleSheet.create({
   privacyText: { flex: 1 },
   privacyTitle: { fontSize: 15, fontWeight: '800', color: '#6498c9', marginBottom: 6 },
   privacyDesc: { fontSize: 13, color: '#4b5563', lineHeight: 19 },
-
   grid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 12,
     justifyContent: 'space-between',
@@ -212,12 +190,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
     borderWidth: 1, borderColor: '#e8f1fb',
   },
-  categoryIcon: {
-    width: 52, height: 52, borderRadius: 26, backgroundColor: '#EFF6FF',
-    alignItems: 'center', justifyContent: 'center',
-  },
+  categoryIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' },
   categoryTitle: { fontSize: 12, fontWeight: '700', color: '#1e3a5f', textAlign: 'center' },
-
   footer: { padding: 24, alignItems: 'center' },
   footerText: { color: '#9ca3af', fontSize: 12 },
 });

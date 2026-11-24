@@ -1,60 +1,33 @@
 import { useEffect, useMemo } from 'react';
-import type { ComponentProps } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   RefreshControl,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
 import {
-  normalizeSituacao,
   SITUACAO_CONFIG,
   SITUACAO_FINALIZADA,
   SITUACAO_INICIAL,
 } from '@/constants';
+import { colors } from '@/constants/theme';
+import ScreenHeader from '@/components/ui/ScreenHeader';
+import StatCard from '@/components/ui/StatCard';
+import DistribuicaoPorTipo from '@/components/denuncia/DistribuicaoPorTipo';
+import {
+  calcularTempoMedioAtendimentoHoras,
+  contarDenuncias,
+  contarPorSituacao,
+  contarPorTipo,
+} from '@/utils/metricas';
 
-type IconName = ComponentProps<typeof Ionicons>['name'];
-
-const { width } = Dimensions.get('window');
-
-function StatCard({ title, value, icon, color }: { title: string; value: number | string; icon: IconName; color: string }) {
-  return (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
-      <View style={[styles.statIcon, { backgroundColor: color + '22' }]}>
-        <Ionicons name={icon} size={22} color={color} />
-      </View>
-      <View>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statTitle}>{title}</Text>
-      </View>
-    </View>
-  );
-}
-
-function BarChart({ data }: { data: { label: string; value: number; color: string }[] }) {
-  const max = Math.max(...data.map((d) => d.value), 1);
-  return (
-    <View style={styles.barChart}>
-      {data.map((item, i) => (
-        <View key={i} style={styles.barRow}>
-          <Text style={styles.barLabel} numberOfLines={1}>{item.label}</Text>
-          <View style={styles.barTrack}>
-            <View style={[styles.barFill, { width: `${(item.value / max) * 100}%`, backgroundColor: item.color }]} />
-          </View>
-          <Text style={styles.barValue}>{item.value}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
+const TIPO_COLORS = ['#6498c9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 function DonutChart({ data }: { data: { label: string; value: number; color: string }[] }) {
-  const total = data.reduce((a, b) => a + b.value, 0) || 1;
+  const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
   return (
     <View style={styles.donut}>
       <View style={styles.donutCircle}>
@@ -62,11 +35,13 @@ function DonutChart({ data }: { data: { label: string; value: number; color: str
         <Text style={styles.donutLabel}>Total</Text>
       </View>
       <View style={styles.donutLegend}>
-        {data.map((item, i) => (
-          <View key={i} style={styles.legendItem}>
+        {data.map((item) => (
+          <View key={item.label} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: item.color }]} />
             <Text style={styles.legendLabel}>{item.label}</Text>
-            <Text style={styles.legendValue}>{item.value} ({Math.round((item.value / total) * 100)}%)</Text>
+            <Text style={styles.legendValue}>
+              {item.value} ({Math.round((item.value / total) * 100)}%)
+            </Text>
           </View>
         ))}
       </View>
@@ -77,45 +52,36 @@ function DonutChart({ data }: { data: { label: string; value: number; color: str
 export default function DashboardScreen() {
   const { denuncias, loading, fetchDenuncias, limparFiltros } = useDenunciasStore();
 
-  // o painel sempre mostra o total, sem filtros da tela de denúncias
   useEffect(() => { limparFiltros(); }, []);
 
   const stats = useMemo(() => {
-    const total = denuncias.length;
-    const emAndamento = denuncias.filter((d) => normalizeSituacao(d.situacao) === SITUACAO_INICIAL).length;
-    const resolvidos = denuncias.filter((d) => normalizeSituacao(d.situacao) === SITUACAO_FINALIZADA).length;
-
-    const porTipo = denuncias.reduce<Record<string, number>>((acc, d) => {
-      acc[d.tipoDenuncia] = (acc[d.tipoDenuncia] || 0) + 1;
-      return acc;
-    }, {});
-
-    const tipoData = Object.entries(porTipo)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
-      .map(([label, value], i) => ({
-        label,
-        value,
-        color: ['#6498c9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'][i],
-      }));
-
-    const situacaoData = [
-      { label: SITUACAO_CONFIG[SITUACAO_INICIAL].label, value: emAndamento, color: SITUACAO_CONFIG[SITUACAO_INICIAL].color },
-      { label: SITUACAO_CONFIG[SITUACAO_FINALIZADA].label, value: resolvidos, color: SITUACAO_CONFIG[SITUACAO_FINALIZADA].color },
-    ];
-
-    const duracoes = denuncias
-      .filter((d) => normalizeSituacao(d.situacao) === SITUACAO_FINALIZADA && d.createdAt && d.updatedAt)
-      .map((d) => new Date(d.updatedAt).getTime() - new Date(d.createdAt).getTime())
-      .filter((ms) => ms >= 0);
-    const mediaHoras = duracoes.length
-      ? duracoes.reduce((a, b) => a + b, 0) / duracoes.length / 3600000
-      : null;
-    const tempoMedio =
-      mediaHoras === null ? '—' : mediaHoras >= 24 ? `${(mediaHoras / 24).toFixed(1)} d` : `${mediaHoras.toFixed(1)} h`;
-
-    return { total, emAndamento, resolvidos, tipoData, situacaoData, tempoMedio };
+    const situacoes = contarPorSituacao(denuncias);
+    const horas = calcularTempoMedioAtendimentoHoras(denuncias);
+    const tempoMedio = horas === null ? '—' : horas >= 24 ? `${(horas / 24).toFixed(1)} d` : `${horas.toFixed(1)} h`;
+    return {
+      total: contarDenuncias(denuncias),
+      emAndamento: situacoes[SITUACAO_INICIAL],
+      resolvidos: situacoes[SITUACAO_FINALIZADA],
+      tempoMedio,
+      tipoData: contarPorTipo(denuncias)
+        .slice(0, 6)
+        .map((item, index) => ({ ...item, color: TIPO_COLORS[index] })),
+      situacaoData: [
+        {
+          label: SITUACAO_CONFIG[SITUACAO_INICIAL].label,
+          value: situacoes[SITUACAO_INICIAL],
+          color: SITUACAO_CONFIG[SITUACAO_INICIAL].color,
+        },
+        {
+          label: SITUACAO_CONFIG[SITUACAO_FINALIZADA].label,
+          value: situacoes[SITUACAO_FINALIZADA],
+          color: SITUACAO_CONFIG[SITUACAO_FINALIZADA].color,
+        },
+      ],
+    };
   }, [denuncias]);
+
+  const resolutionRate = stats.total > 0 ? Math.round((stats.resolvidos / stats.total) * 100) : 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -123,12 +89,7 @@ export default function DashboardScreen() {
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchDenuncias} />}
         showsVerticalScrollIndicator={false}
       >
-
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Dashboard</Text>
-          <Text style={styles.headerSub}>Visão geral das ocorrências</Text>
-        </View>
-
+        <ScreenHeader variant="simple" title="Dashboard" subtitle="Visão geral das ocorrências" />
 
         <View style={styles.statsGrid}>
           <StatCard title="Total" value={stats.total} icon="document-text-outline" color="#6498c9" />
@@ -137,93 +98,54 @@ export default function DashboardScreen() {
           <StatCard title="Tempo médio" value={stats.tempoMedio} icon="time-outline" color="#F59E0B" />
         </View>
 
-
         {stats.total > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Taxa de Resolução</Text>
             <View style={styles.progressTrack}>
-              <View
-                style={[styles.progressFill, {
-                  width: `${Math.round((stats.resolvidos / stats.total) * 100)}%`,
-                  backgroundColor: '#10B981',
-                }]}
-              />
+              <View style={[styles.progressFill, { width: `${resolutionRate}%` }]} />
             </View>
-            <Text style={styles.progressLabel}>
-              {Math.round((stats.resolvidos / stats.total) * 100)}% das denúncias resolvidas
-            </Text>
+            <Text style={styles.progressLabel}>{resolutionRate}% das denúncias resolvidas</Text>
           </View>
         )}
-
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Por Situação</Text>
           <DonutChart data={stats.situacaoData} />
         </View>
 
-
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Por Tipo de Ocorrência</Text>
-          <BarChart data={stats.tipoData} />
+          <DistribuicaoPorTipo data={stats.tipoData} />
         </View>
-
-        <View style={{ height: 20 }} />
+        <View style={styles.bottomSpace} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f4f8' },
-  header: {
-    backgroundColor: '#fff', padding: 20, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: '#f0f4f8',
-  },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#1e3a5f' },
-  headerSub: { fontSize: 13, color: '#6b7280', marginTop: 2 },
-
+  container: { flex: 1, backgroundColor: colors.background },
   statsGrid: { padding: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  statCard: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 16,
-    width: (width - 44) / 2, flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderLeftWidth: 4,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
-  },
-  statIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontSize: 24, fontWeight: '800', color: '#1e3a5f' },
-  statTitle: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
-
   card: {
-    backgroundColor: '#fff', borderRadius: 20, padding: 20, marginHorizontal: 16, marginBottom: 16,
+    backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginHorizontal: 16, marginBottom: 16,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  cardTitle: { fontSize: 16, fontWeight: '800', color: '#1e3a5f', marginBottom: 16 },
-
+  cardTitle: { fontSize: 16, fontWeight: '800', color: colors.primaryDark, marginBottom: 16 },
   progressTrack: { height: 10, backgroundColor: '#f3f4f6', borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
-  progressFill: { height: '100%', borderRadius: 5 },
-  progressLabel: { fontSize: 13, color: '#6b7280' },
-
-
+  progressFill: { height: '100%', borderRadius: 5, backgroundColor: '#10B981' },
+  progressLabel: { fontSize: 13, color: colors.grayDark },
   donut: { gap: 16 },
   donutCircle: {
     width: 100, height: 100, borderRadius: 50,
     borderWidth: 12, borderColor: '#6498c9',
-    alignItems: 'center', justifyContent: 'center',
-    alignSelf: 'center',
+    alignItems: 'center', justifyContent: 'center', alignSelf: 'center',
   },
-  donutTotal: { fontSize: 24, fontWeight: '800', color: '#1e3a5f' },
-  donutLabel: { fontSize: 11, color: '#9ca3af' },
+  donutTotal: { fontSize: 24, fontWeight: '800', color: colors.primaryDark },
+  donutLabel: { fontSize: 11, color: colors.grayLight },
   donutLegend: { gap: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   legendDot: { width: 12, height: 12, borderRadius: 6 },
-  legendLabel: { flex: 1, fontSize: 13, color: '#374151', fontWeight: '600' },
-  legendValue: { fontSize: 13, color: '#6b7280' },
-
-
-  barChart: { gap: 12 },
-  barRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  barLabel: { width: 90, fontSize: 11, color: '#4b5563', fontWeight: '600' },
-  barTrack: { flex: 1, height: 10, backgroundColor: '#f3f4f6', borderRadius: 5, overflow: 'hidden' },
-  barFill: { height: '100%', borderRadius: 5 },
-  barValue: { width: 28, fontSize: 12, fontWeight: '700', color: '#1e3a5f', textAlign: 'right' },
+  legendLabel: { flex: 1, fontSize: 13, color: colors.text, fontWeight: '600' },
+  legendValue: { fontSize: 13, color: colors.grayDark },
+  bottomSpace: { height: 20 },
 });
