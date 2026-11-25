@@ -58,11 +58,10 @@ export const CriarGestorModal = ({ isOpen, onClose, onSuccess }: CriarGestorModa
 
     setIsSubmitting(true);
     try {
-      const response = await usersAPI.create({
+      const response = await usersAPI.createGestor({
         name: pendingData.name,
         email: pendingData.email,
         password: pendingData.password,
-        role: "GESTOR",
       });
 
       if (response.success) {

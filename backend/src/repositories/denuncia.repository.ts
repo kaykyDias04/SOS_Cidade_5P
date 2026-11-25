@@ -2,17 +2,20 @@ import { prisma } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 
 export interface DenunciaFiltros {
-  tipoDenuncia?: string;
-  bairroOcorrencia?: string;
-  situacao?: string;
+  tipoDenuncia?: string | string[];
+  bairroOcorrencia?: string | string[];
+  situacao?: string | string[];
 }
 
 function buildWhere(userId?: number, filtros: DenunciaFiltros = {}): Prisma.DenunciaWhereInput {
+  const filtroPrisma = (value: string | string[] | undefined) =>
+    Array.isArray(value) ? { in: value } : value;
+
   return {
     ...(userId === undefined ? {} : { userId }),
-    ...(filtros.tipoDenuncia === undefined ? {} : { tipoDenuncia: filtros.tipoDenuncia }),
-    ...(filtros.bairroOcorrencia === undefined ? {} : { bairroOcorrencia: filtros.bairroOcorrencia }),
-    ...(filtros.situacao === undefined ? {} : { situacao: filtros.situacao }),
+    ...(filtros.tipoDenuncia === undefined ? {} : { tipoDenuncia: filtroPrisma(filtros.tipoDenuncia) }),
+    ...(filtros.bairroOcorrencia === undefined ? {} : { bairroOcorrencia: filtroPrisma(filtros.bairroOcorrencia) }),
+    ...(filtros.situacao === undefined ? {} : { situacao: filtroPrisma(filtros.situacao) }),
   };
 }
 

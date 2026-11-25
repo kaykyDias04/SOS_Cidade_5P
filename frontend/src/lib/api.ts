@@ -169,6 +169,13 @@ export const usersAPI = {
     });
   },
 
+  createGestor: async (data: { email: string; name: string; password: string }) => {
+    return apiCall<User>('/users/gestores', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   list: async (role?: string) => {
     const url = role ? `/users?role=${role}` : '/users';
     return apiCall<User[]>(url);

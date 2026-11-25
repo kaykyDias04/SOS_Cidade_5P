@@ -14,6 +14,6 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     (req as any).user = decoded;
     next();
   } catch (err) {
-    return res.status(403).json({ success: false, error: 'Forbidden' });
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
 };

@@ -17,25 +17,25 @@ describe('authenticate: sessão por cookie authToken ou Authorization Bearer', (
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('UN-SESSAO-02: token assinado com outro segredo recebe 403', () => {
+  it('UN-SESSAO-02: token assinado com outro segredo recebe 401', () => {
     const res = criarRes();
     const next = jest.fn();
     const forjado = jwt.sign({ ...denunciante, role: 'GESTOR' }, 'segredo-de-quem-ataca');
 
     authenticate(comoReq({ cookies: { authToken: forjado }, headers: {} }), comoRes(res), next);
 
-    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('UN-SESSAO-03: token expirado recebe 403', () => {
+  it('UN-SESSAO-03: token expirado recebe 401', () => {
     const res = criarRes();
     const next = jest.fn();
     const expirado = jwt.sign({ ...denunciante, exp: Math.floor(Date.now() / 1000) - 60 }, segredo());
 
     authenticate(comoReq({ cookies: { authToken: expirado }, headers: {} }), comoRes(res), next);
 
-    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
   });
 

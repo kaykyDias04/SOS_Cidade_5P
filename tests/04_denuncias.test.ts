@@ -112,6 +112,40 @@ describe('SUT API Tests - Módulo 04: Gestão de Denúncias e Ocorrências Urban
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
     });
+
+    it('CT-DEN-22: Deve impedir que um GESTOR crie denúncias', async () => {
+      const response = await request(app)
+        .post('/denuncias')
+        .set('Authorization', getBearerHeader(tokenGestor))
+        .send({
+          tipoDenuncia: 'Buraco',
+          identificacao: true,
+          bairroOcorrencia: 'Madalena',
+          descricaoOcorrencia: 'Tentativa de criação por gestor.',
+          dataOcorrencia: '2026-11-25',
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({ success: false, error: 'Forbidden' });
+      expect(mockPrisma.denuncia.create).not.toHaveBeenCalled();
+    });
+
+    it('CT-DEN-23: Deve responder 401 para token inválido', async () => {
+      const response = await request(app)
+        .post('/denuncias')
+        .set('Authorization', 'Bearer token-invalido')
+        .send({
+          tipoDenuncia: 'Buraco',
+          identificacao: true,
+          bairroOcorrencia: 'Madalena',
+          descricaoOcorrencia: 'Tentativa com token inválido.',
+          dataOcorrencia: '2026-11-25',
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({ success: false, error: 'Unauthorized' });
+      expect(mockPrisma.denuncia.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('GET /denuncias - Listagem e Paginação', () => {
