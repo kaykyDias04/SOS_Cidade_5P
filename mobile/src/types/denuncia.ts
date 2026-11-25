@@ -15,8 +15,8 @@ export type Denuncia = {
 };
 
 export type DenunciaFiltros = {
-  tipoDenuncia?: string;
-  bairroOcorrencia?: string;
+  tipoDenuncia?: string | string[];
+  bairroOcorrencia?: string | string[];
   situacao?: string;
 };
 

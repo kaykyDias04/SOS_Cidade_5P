@@ -1,8 +1,13 @@
 import { apiRequest } from '@/services/http';
-import type { CreateUserInput, User } from '@/types';
+import type { CreateGestorInput, CreateUserInput, User } from '@/types';
 
 export const usersAPI = {
   create: async (data: CreateUserInput) => apiRequest<User>('/users', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  createGestor: async (data: CreateGestorInput) => apiRequest<User>('/users/gestores', {
     method: 'POST',
     body: JSON.stringify(data),
   }),

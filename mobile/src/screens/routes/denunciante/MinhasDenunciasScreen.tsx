@@ -7,25 +7,34 @@ import {
   StyleSheet,
   RefreshControl,
   TextInput,
-  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
-import { normalizeSituacao, SITUACAO_CONFIG, SITUACOES, type Situacao } from '@/constants';
+import { normalizeSituacao } from '@/constants';
 import DenunciaCard from '@/components/denuncia/DenunciaCard';
 import EmptyState from '@/components/feedback/EmptyState';
 import ErrorState from '@/components/feedback/ErrorState';
 import OfflineBanner from '@/components/feedback/OfflineBanner';
 import LoadingState from '@/components/feedback/LoadingState';
+import FiltroBar from '@/components/denuncia/FiltroBar';
 import { colors } from '@/constants/theme';
 
 export default function MinhasDenunciasScreen() {
   const router = useRouter();
-  const { denuncias, loading, error, offline, cachedAt, fetchDenuncias } = useDenunciasStore();
+  const {
+    denuncias,
+    loading,
+    error,
+    offline,
+    cachedAt,
+    fetchDenuncias,
+    filtros,
+    setFiltros,
+    opcoes,
+  } = useDenunciasStore();
   const [search, setSearch] = useState('');
-  const [filtroSituacao, setFiltroSituacao] = useState<Situacao | null>(null);
 
   useEffect(() => {
     fetchDenuncias();
@@ -38,12 +47,14 @@ export default function MinhasDenunciasScreen() {
       !search ||
       d.tipoDenuncia.toLowerCase().includes(search.toLowerCase()) ||
       d.bairroOcorrencia.toLowerCase().includes(search.toLowerCase()) ||
-      d.protocolo.toLowerCase().includes(search.toLowerCase());
-    const matchFiltro = !filtroSituacao || normalizeSituacao(d.situacao) === filtroSituacao;
+      d.protocolo.toLowerCase().includes(search.toLowerCase()) ||
+      d.descricaoOcorrencia.toLowerCase().includes(search.toLowerCase()) ||
+      d.dataOcorrencia.toLowerCase().includes(search.toLowerCase()) ||
+      d.situacao.toLowerCase().includes(search.toLowerCase());
+    const matchFiltro = !filtros.situacao ||
+      normalizeSituacao(d.situacao) === normalizeSituacao(filtros.situacao);
     return matchSearch && matchFiltro;
   });
-
-  const getSituacao = (situacao: string) => SITUACAO_CONFIG[normalizeSituacao(situacao)];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -72,27 +83,7 @@ export default function MinhasDenunciasScreen() {
       </View>
 
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filtros}
-        style={{ flexGrow: 0, flexShrink: 0, height: 40, marginBottom: 8 }}
-      >
-        {([null, ...SITUACOES] as (Situacao | null)[]).map((s) => {
-          const active = filtroSituacao === s;
-          const label = s ? getSituacao(s).label : 'Todas';
-          return (
-            <TouchableOpacity
-              key={String(s)}
-              style={[styles.filtroChip, active && styles.filtroChipActive]}
-              onPress={() => setFiltroSituacao(s)}
-              accessibilityLabel={`Filtrar ${label}`}
-            >
-              <Text style={[styles.filtroText, active && styles.filtroTextActive]}>{label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <FiltroBar filtros={filtros} opcoes={opcoes} onChange={setFiltros} />
 
 
       {offline && cachedAt ? <OfflineBanner cachedAt={cachedAt} /> : null}
@@ -151,15 +142,4 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14, color: colors.inputText },
 
-  filtros: {
-    flexDirection: 'row', paddingHorizontal: 16, gap: 8,
-    flexWrap: 'nowrap', alignItems: 'center',
-  },
-  filtroChip: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-    backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border,
-  },
-  filtroChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filtroText: { fontSize: 12, fontWeight: '700', color: colors.grayDark },
-  filtroTextActive: { color: colors.surface },
 });

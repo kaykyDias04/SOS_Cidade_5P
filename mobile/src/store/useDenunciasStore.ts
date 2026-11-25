@@ -70,7 +70,7 @@ export const useDenunciasStore = create<DenunciasState>((set, get) => ({
       const chaveCache = `denuncias:${currentUser?.role ?? 'anonimo'}:${currentUser?.id ?? 0}:${page}:${limit}:${JSON.stringify(filtros)}`;
 
       const response = ehDenunciante
-        ? await denunciasAPI.listarMinhas(page, limit)
+        ? await denunciasAPI.listarMinhas(page, limit, filtros)
         : await denunciasAPI.listarTodas(page, limit, filtros);
 
       // Junta as opções de filtro já vistas com as da lista atual.

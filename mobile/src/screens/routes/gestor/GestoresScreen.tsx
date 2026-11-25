@@ -42,7 +42,7 @@ export default function GestoresScreen() {
   const handleCreate = async () => {
     if (!validate()) return;
     setSubmitting(true);
-    const res = await criar({ name: nome.trim(), email: email.trim(), password: senha, role: 'GESTOR' });
+    const res = await criar({ name: nome.trim(), email: email.trim(), password: senha });
     setSubmitting(false);
     if (res.success && res.data) {
       Toast.show({ type: 'success', text1: 'Gestor criado!', text2: `${nome} foi adicionado com sucesso.` });
