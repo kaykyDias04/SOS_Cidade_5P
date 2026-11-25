@@ -4,24 +4,40 @@ import { UserService } from '../services/user.service';
 export class UserController {
   private userService = new UserService();
 
+  private handleCreateError(error: unknown, res: Response) {
+    const serviceError = error instanceof Error ? error as Error & { code?: string } : null;
+    if (serviceError?.code === 'LEGAL_CONSENT_REQUIRED') {
+      return res.status(400).json({ success: false, error: serviceError.message });
+    }
+    if (serviceError?.code === 'VALIDATION_ERROR') {
+      return res.status(400).json({ success: false, error: serviceError.message });
+    }
+    if (serviceError?.code === 'P2002') {
+      return res.status(400).json({
+        success: false,
+        error: 'Este email já está cadastrado.',
+      });
+    }
+
+    console.error('Error creating user:', error);
+    return res.status(500).json({ success: false, error: 'Erro interno no servidor' });
+  }
+
   async create(req: Request, res: Response) {
     try {
       const user = await this.userService.createUser(req.body);
       res.json({ id: user.id, email: user.email, name: user.name, role: user.role });
-    } catch (error: any) {
-      if (error.code === 'LEGAL_CONSENT_REQUIRED') {
-        return res.status(400).json({ success: false, error: error.message });
-      }
-      console.error('Error creating user:', error);
-      
-      if (error.code === 'P2002') {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Este email já está cadastrado.' 
-        });
-      }
+    } catch (error) {
+      return this.handleCreateError(error, res);
+    }
+  }
 
-      res.status(500).json({ success: false, error: 'Erro interno no servidor' });
+  async createGestor(req: Request, res: Response) {
+    try {
+      const user = await this.userService.createGestor(req.body);
+      return res.json({ id: user.id, email: user.email, name: user.name, role: user.role });
+    } catch (error) {
+      return this.handleCreateError(error, res);
     }
   }
 

@@ -5,6 +5,10 @@ import bcrypt from 'bcryptjs';
 export class UserService {
   private userRepository = new UserRepository();
 
+  private validationError(message: string) {
+    return Object.assign(new Error(message), { code: 'VALIDATION_ERROR' });
+  }
+
   async createUser(data: any) {
     if (data.acceptedTerms !== true || data.acceptedPrivacy !== true) {
       const error = new Error('É necessário aceitar os Termos de Uso e a Política de Privacidade.');
@@ -27,6 +31,30 @@ export class UserService {
       privacyAcceptedAt: acceptedAt,
       termsVersion: LEGAL_DOCUMENT_VERSION,
       privacyVersion: LEGAL_DOCUMENT_VERSION,
+    });
+  }
+
+  async createGestor(data: any) {
+    const name = typeof data.name === 'string' ? data.name.trim() : '';
+    const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
+    const password = typeof data.password === 'string' ? data.password : '';
+
+    if (name.length < 2) {
+      throw this.validationError('O nome deve ter no mínimo 2 caracteres.');
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw this.validationError('Informe um e-mail válido.');
+    }
+    if (password.length < 6) {
+      throw this.validationError('A senha deve ter no mínimo 6 caracteres.');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return this.userRepository.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'GESTOR',
     });
   }
 

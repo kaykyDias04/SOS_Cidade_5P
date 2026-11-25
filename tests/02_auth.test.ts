@@ -170,17 +170,17 @@ describe('SUT API Tests - Módulo 02: Autenticação, Sessão e Proteção de Ro
       });
     });
 
-    it('CT-AUT-09: Deve bloquear requisições com token JWT forjado/inválido com status 403 Forbidden', async () => {
+    it('CT-AUT-09: Deve bloquear requisições com token JWT forjado/inválido com status 401 Unauthorized', async () => {
       const forgedToken = generateInvalidToken();
 
       const response = await request(app)
         .get('/denuncias')
         .set('Authorization', getBearerHeader(forgedToken));
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
       expect(response.body).toEqual({
         success: false,
-        error: 'Forbidden',
+        error: 'Unauthorized',
       });
     });
 

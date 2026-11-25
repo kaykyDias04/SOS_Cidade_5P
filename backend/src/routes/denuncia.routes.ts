@@ -11,7 +11,7 @@ router.use(authenticate);
 router.get('/', authorize('GESTOR'), denunciaController.list.bind(denunciaController));
 router.get('/minhas', denunciaController.getMinhasDenuncias.bind(denunciaController));
 router.get('/:id', denunciaController.getById.bind(denunciaController));
-router.post('/', denunciaController.create.bind(denunciaController));
+router.post('/', authorize('DENUNCIANTE'), denunciaController.create.bind(denunciaController));
 router.patch('/:id', authorize('GESTOR'), denunciaController.update.bind(denunciaController));
 router.delete('/:id', authorize('GESTOR'), denunciaController.delete.bind(denunciaController));
 

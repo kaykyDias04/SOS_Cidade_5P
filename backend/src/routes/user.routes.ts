@@ -7,6 +7,7 @@ const router = Router();
 const userController = new UserController();
 
 router.post('/', userController.create.bind(userController));
+router.post('/gestores', authenticate, authorize('GESTOR'), userController.createGestor.bind(userController));
 router.get('/', authenticate, authorize('GESTOR'), userController.getAll.bind(userController));
 router.delete('/:id', authenticate, authorize('GESTOR'), userController.delete.bind(userController));
 

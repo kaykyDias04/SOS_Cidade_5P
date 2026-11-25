@@ -1,8 +1,14 @@
 import { Request, Response } from 'express';
 import { DenunciaService } from '../services/denuncia.service';
 
-function queryString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+function queryFilter(value: unknown): string | string[] | undefined {
+  const values = (Array.isArray(value) ? value : [value])
+    .filter((entry): entry is string => typeof entry === 'string')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (values.length === 0) return undefined;
+  return values.length === 1 ? values[0] : values;
 }
 
 export class DenunciaController {
@@ -13,9 +19,9 @@ export class DenunciaController {
       const page = parseInt(req.query._page as string) || 1;
       const limit = parseInt(req.query._limit as string) || 50;
       const filtros = {
-        tipoDenuncia: queryString(req.query.tipoDenuncia),
-        bairroOcorrencia: queryString(req.query.bairroOcorrencia),
-        situacao: queryString(req.query.situacao),
+        tipoDenuncia: queryFilter(req.query.tipoDenuncia),
+        bairroOcorrencia: queryFilter(req.query.bairroOcorrencia),
+        situacao: queryFilter(req.query.situacao),
       };
       const result = await this.denunciaService.getDenuncias(page, limit, undefined, filtros);
       res.json(result);
@@ -29,7 +35,12 @@ export class DenunciaController {
       const page = parseInt(req.query._page as string) || 1;
       const limit = parseInt(req.query._limit as string) || 50;
       const userId = (req as any).user.id;
-      const result = await this.denunciaService.getDenuncias(page, limit, userId);
+      const filtros = {
+        tipoDenuncia: queryFilter(req.query.tipoDenuncia),
+        bairroOcorrencia: queryFilter(req.query.bairroOcorrencia),
+        situacao: queryFilter(req.query.situacao),
+      };
+      const result = await this.denunciaService.getDenuncias(page, limit, userId, filtros);
       res.json(result);
     } catch (error) {
       res.status(500).json({ success: false, error: 'Internal server error' });
