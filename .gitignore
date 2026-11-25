@@ -28,6 +28,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# local delivery patch
+/entrega-20-11.patch
+
 # vercel
 .vercel
 

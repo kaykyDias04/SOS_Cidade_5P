@@ -1,0 +1,25 @@
+{"_e":"root:init","_t":1795011707523,"format":"v0-jsonl","version":"56.1.27"}
+{"_e":"env:mode","_t":1795011707526,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1795011707537,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1795011711440,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1795011716272,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1795011730789,"atlas":false,"workers":6,"host":"::","port":8081}
+{"_e":"metro:client_log","_t":1795011809189,"level":"error","data":["Project is incompatible with this version of Expo Go\n\n• The installed version of Expo Go is for SDK 58.\n• The project you opened uses SDK 56.\n\nHow to fix this error:\nEither upgrade this project to SDK 58 or install an older version of Expo Go that is compatible with your project.\n\n<a href='https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/'>Learn how to upgrade to SDK 58.</a>\n\n<a href='https://expo.dev/go?sdkVersion=56&platform=android&device=true'>Learn how to install Expo Go for SDK 56</a>."]}
+{"_e":"root:init","_t":1795033396104,"format":"v0-jsonl","version":"56.1.14"}
+{"_e":"env:mode","_t":1795033396110,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1795033396124,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1795033398971,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1795033403432,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1795033428714,"atlas":false,"workers":6,"host":"::","port":8081}
+{"_e":"root:init","_t":1795034115939,"format":"v0-jsonl","version":"56.1.14"}
+{"_e":"env:mode","_t":1795034115942,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1795034115953,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1795034117488,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1795034120003,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1795034139577,"atlas":false,"workers":6,"host":"::","port":8081}
+{"_e":"root:init","_t":1795035347388,"format":"v0-jsonl","version":"56.1.27"}
+{"_e":"env:mode","_t":1795035347392,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1795035347406,"mode":"development","files":[],"env":{}}
+{"_e":"devserver:start","_t":1795035349454,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1795035352536,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1795035365237,"atlas":false,"workers":6,"host":"::","port":8081}

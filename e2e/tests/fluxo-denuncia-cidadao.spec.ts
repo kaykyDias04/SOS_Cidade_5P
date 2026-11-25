@@ -86,6 +86,7 @@ test('CT-E2E-01: cidadão se cadastra, registra uma denúncia e a encontra em Mi
   // 4. Verifica no histórico do cidadão
   await page.goto('/minhas-denuncias');
 
-  await expect(page.getByText(protocolo)).toBeVisible();
-  await expect(page.getByText('Buraco na Via')).toBeVisible();
+  const denunciaRow = page.getByRole('row').filter({ hasText: protocolo });
+  await expect(denunciaRow).toHaveCount(1);
+  await expect(denunciaRow).toContainText('Buraco na Via');
 });
