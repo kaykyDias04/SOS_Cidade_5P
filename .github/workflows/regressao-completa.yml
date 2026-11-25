@@ -8,6 +8,11 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+# Evita gastar recursos em regressões antigas da mesma branch.
+concurrency:
+  group: regressao-completa-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   issues: write # abrir issue automática quando a regressão falha
@@ -31,6 +36,7 @@ jobs:
         options: --health-cmd "redis-cli ping" --health-interval 5s --health-retries 12
 
     env:
+      CI: "true"
       DATABASE_URL: postgresql://postgres@localhost:5432/soscidade
       DIRECT_URL: postgresql://postgres@localhost:5432/soscidade
       REDIS_URL: redis://localhost:6379
@@ -49,6 +55,14 @@ jobs:
       - name: Testes unitários (frontend)
         run: npm run test:unit:frontend
 
+      - name: Testes unitários (mobile)
+        if: ${{ !cancelled() }}
+        run: npm ci --prefix mobile
+
+      - name: Executar testes unitários (mobile)
+        if: ${{ !cancelled() }}
+        run: npm run test:unit:mobile
+
       - name: Testes unitários (backend)
         if: ${{ !cancelled() }}
         run: npm run test:unit:backend
@@ -61,11 +75,21 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run test:e2e
 
+      - name: Registrar testes instáveis da regressão
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: ./.github/actions/registrar-flaky
+        with:
+          arquivo: resultados/flaky-e2e.json
+
       - name: Testes em quarentena (falhas isoladas)
         if: ${{ !cancelled() }}
         continue-on-error: true
         env:
           QUARANTINE_RETRIES: ${{ vars.QUARANTINE_RETRIES || '2' }}
+          E2E_JUNIT_FILE: resultados-quarentena/e2e.xml
+          E2E_FLAKY_FILE: resultados-quarentena/flaky-e2e.json
+          PLAYWRIGHT_HTML_REPORT: resultados-quarentena/playwright-report
         run: npm run test:quarantine -- frontend backend api e2e
 
       - name: Relatório de gestão dos testes
@@ -80,8 +104,15 @@ jobs:
           path: relatorios/
           retention-days: 30
 
-      # Sobe sempre, verde ou vermelho: XML de todas as suítes, logs do backend e do
-      # frontend (gerados pela action subir-stack) e o relatório HTML do E2E.
+      - name: Registrar testes instáveis da quarentena
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: ./.github/actions/registrar-flaky
+        with:
+          arquivo: resultados-quarentena/flaky-e2e.json
+
+      # Sobe sempre, verde ou vermelho: XMLs, relatórios da gestão de testes,
+      # resultados separados da quarentena e logs gerados pela action subir-stack.
       - name: Salvar resultados dos testes
         id: artefato
         if: ${{ !cancelled() }}
@@ -90,6 +121,8 @@ jobs:
           name: resultados-testes
           path: |
             resultados/
+            resultados-quarentena/
+            relatorios/
             backend/backend.log
             frontend/frontend.log
             e2e/playwright-report/
@@ -112,7 +145,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: ./.github/actions/gerar-relatorios
         with:
-          pasta-xml: resultados
+          pasta-xml: resultados/
 
       # Falha de madrugada ninguém vê: abre issue (ou comenta na que já está aberta).
       - name: Abrir issue de falha

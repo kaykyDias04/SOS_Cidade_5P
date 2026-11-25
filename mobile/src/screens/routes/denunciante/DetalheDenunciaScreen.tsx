@@ -4,14 +4,20 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
-import { getTipoColor, normalizeSituacao, SITUACAO_CONFIG } from '@/constants';
+import { getTipoColor } from '@/constants';
+import StatusBadge from '@/components/denuncia/StatusBadge';
+import EmptyState from '@/components/feedback/EmptyState';
+import ErrorState from '@/components/feedback/ErrorState';
+import LoadingState from '@/components/feedback/LoadingState';
+import { colors } from '@/constants/theme';
+import { formatDate } from '@/utils/formatDate';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 export default function DetalheDenunciaScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { denuncias } = useDenunciasStore();
+  const { denuncias, loading, error, fetchDenuncias } = useDenunciasStore();
 
   const denuncia = denuncias.find((d) => String(d.id) === String(id));
 
@@ -19,17 +25,31 @@ export default function DetalheDenunciaScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="Voltar">
-          <Ionicons name="arrow-back" size={22} color="#1e3a5f" />
+          <Ionicons name="arrow-back" size={22} color={colors.primaryDark} />
         </TouchableOpacity>
-        <View style={styles.notFound}>
-          <Ionicons name="alert-circle-outline" size={56} color="#d1d5db" />
-          <Text style={styles.notFoundText}>Denúncia não encontrada</Text>
-        </View>
+        {error ? (
+          <ErrorState
+            title="Erro ao carregar denúncia"
+            message={error}
+            onRetry={fetchDenuncias}
+            style={styles.state}
+          />
+        ) : loading ? (
+          <LoadingState message="Carregando denúncia..." style={styles.state} />
+        ) : (
+          <EmptyState
+            title="Denúncia não encontrada"
+            icon="alert-circle-outline"
+            iconSize={56}
+            iconColor={colors.grayLight}
+            style={styles.notFound}
+            titleStyle={styles.notFoundText}
+          />
+        )}
       </SafeAreaView>
     );
   }
 
-  const sit = SITUACAO_CONFIG[normalizeSituacao(denuncia.situacao)];
   const cor = getTipoColor(denuncia.tipoDenuncia);
 
   return (
@@ -37,7 +57,7 @@ export default function DetalheDenunciaScreen() {
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="Voltar">
-          <Ionicons name="arrow-back" size={22} color="#1e3a5f" />
+          <Ionicons name="arrow-back" size={22} color={colors.primaryDark} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalhes da Denúncia</Text>
         <View style={{ width: 40 }} />
@@ -48,16 +68,13 @@ export default function DetalheDenunciaScreen() {
         <View style={[styles.heroCard, { borderLeftColor: cor }]}>
           <View style={{ flex: 1 }}>
             <Text style={styles.heroTipo}>{denuncia.tipoDenuncia}</Text>
-            <View style={[styles.badge, { backgroundColor: sit.bg }]}>
-              <Ionicons name={sit.icon} size={12} color={sit.text} />
-              <Text style={[styles.badgeText, { color: sit.text }]}>{sit.label}</Text>
-            </View>
+            <StatusBadge situacao={denuncia.situacao} style={styles.badge} />
           </View>
         </View>
 
 
         <View style={styles.protocoloCard}>
-          <Ionicons name="shield-checkmark-outline" size={18} color="#6498c9" />
+          <Ionicons name="shield-checkmark-outline" size={18} color={colors.primary} />
           <View style={{ flex: 1 }}>
             <Text style={styles.protocoloLabel}>Número de Protocolo</Text>
             <Text style={styles.protocoloValue}>#{denuncia.protocolo}</Text>
@@ -68,11 +85,11 @@ export default function DetalheDenunciaScreen() {
         <View style={styles.infoGrid}>
           <InfoItem icon="location-outline" label="Bairro" value={denuncia.bairroOcorrencia} />
           <InfoItem icon="calendar-outline" label="Data da Ocorrência"
-            value={new Date(denuncia.dataOcorrencia).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} />
+            value={formatDate(denuncia.dataOcorrencia, { day: '2-digit', month: 'long', year: 'numeric' })} />
           <InfoItem icon="person-outline" label="Identificação"
             value={denuncia.identificacao ? denuncia.nomeDenunciante : 'Anônimo'} />
           <InfoItem icon="time-outline" label="Registrado em"
-            value={new Date(denuncia.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} />
+            value={formatDate(denuncia.createdAt, { day: '2-digit', month: 'long', year: 'numeric' })} />
         </View>
 
 
@@ -91,7 +108,7 @@ function InfoItem({ icon, label, value }: { icon: IconName; label: string; value
   return (
     <View style={styles.infoItem}>
       <View style={styles.infoIconCircle}>
-        <Ionicons name={icon} size={16} color="#6498c9" />
+        <Ionicons name={icon} size={16} color={colors.primary} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.infoLabel}>{label}</Text>
@@ -102,46 +119,40 @@ function InfoItem({ icon, label, value }: { icon: IconName; label: string; value
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f4f8' },
+  container: { flex: 1, backgroundColor: colors.background },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#f0f4f8',
+    backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: colors.background,
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFF6FF',
+    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceTint,
     alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { fontSize: 17, fontWeight: '800', color: '#1e3a5f' },
+  headerTitle: { fontSize: 17, fontWeight: '800', color: colors.primaryDark },
 
   scroll: { padding: 16, gap: 14 },
 
   heroCard: {
-    backgroundColor: '#fff', borderRadius: 18, padding: 18,
+    backgroundColor: colors.surface, borderRadius: 18, padding: 18,
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderLeftWidth: 4,
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, elevation: 3,
   },
-  emojiCircle: {
-    width: 56, height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  emoji: { fontSize: 26 },
-  heroTipo: { fontSize: 16, fontWeight: '800', color: '#1e3a5f', marginBottom: 8 },
+  heroTipo: { fontSize: 16, fontWeight: '800', color: colors.primaryDark, marginBottom: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
-  badgeText: { fontSize: 11, fontWeight: '700' },
 
   protocoloCard: {
-    backgroundColor: '#EFF6FF', borderRadius: 14, padding: 16,
+    backgroundColor: colors.surfaceTint, borderRadius: 14, padding: 16,
     flexDirection: 'row', alignItems: 'center', gap: 12,
     borderWidth: 1, borderColor: '#bfdbfe',
   },
-  protocoloLabel: { fontSize: 11, color: '#6498c9', fontWeight: '700', marginBottom: 2 },
-  protocoloValue: { fontSize: 18, fontWeight: '800', color: '#1e3a5f' },
+  protocoloLabel: { fontSize: 11, color: colors.primary, fontWeight: '700', marginBottom: 2 },
+  protocoloValue: { fontSize: 18, fontWeight: '800', color: colors.primaryDark },
 
   infoGrid: {
-    backgroundColor: '#fff', borderRadius: 18, overflow: 'hidden',
+    backgroundColor: colors.surface, borderRadius: 18, overflow: 'hidden',
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   infoItem: {
@@ -149,20 +160,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   infoIconCircle: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#EFF6FF',
+    width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surfaceTint,
     alignItems: 'center', justifyContent: 'center',
   },
-  infoLabel: { fontSize: 11, color: '#9ca3af', fontWeight: '600', marginBottom: 2 },
-  infoValue: { fontSize: 14, color: '#1e3a5f', fontWeight: '700' },
+  infoLabel: { fontSize: 11, color: colors.gray, fontWeight: '600', marginBottom: 2 },
+  infoValue: { fontSize: 14, color: colors.primaryDark, fontWeight: '700' },
 
   section: { gap: 10 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#1e3a5f' },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.primaryDark },
   descCard: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 16,
+    backgroundColor: colors.surface, borderRadius: 16, padding: 16,
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 1,
   },
   descText: { fontSize: 14, color: '#4b5563', lineHeight: 22 },
 
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  notFoundText: { fontSize: 16, color: '#9ca3af', fontWeight: '700' },
+  state: { flex: 1, justifyContent: 'center' },
+  notFound: { flex: 1, justifyContent: 'center', paddingVertical: 0, gap: 12 },
+  notFoundText: { fontSize: 16, color: colors.gray, fontWeight: '700' },
 });

@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: e2e-smoke-${{ github.ref }}
@@ -47,6 +48,15 @@ jobs:
 
       - name: Testes E2E smoke
         run: npm run test:e2e:smoke
+        env:
+          CI: "true"
+
+      - name: Registrar testes instáveis
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: ./.github/actions/registrar-flaky
+        with:
+          arquivo: resultados/flaky-e2e.json
 
       - name: Testes em quarentena (falhas isoladas)
         if: ${{ !cancelled() }}

@@ -3,6 +3,7 @@
 import json
 import os
 import pathlib
+import re
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -13,6 +14,10 @@ LIMITES_TEMPO = {
     "unit-backend": 30.0,
     "api": 60.0,
     "e2e": 300.0,
+    # 60s tolera a inicialização fria do transformador Expo no CI.
+    "unit-mobile": 60.0,
+    # O orçamento iguala o E2E web por incluir a inicialização do navegador e do app.
+    "e2e-mobile-web": 300.0,
 }
 
 
@@ -150,6 +155,76 @@ def coletar_cobertura_backlog(caminho_plano="plano-de-testes-equipe8.md"):
     }
 
 
+def coletar_cobertura_mobile(caminho_backlog="mobile/testes/backlog-testes-mobile.md"):
+    if not os.path.exists(caminho_backlog):
+        return {"total": 0, "automatizados": 0, "taxa": 0.0, "pendentes": []}
+
+    with open(caminho_backlog, "r", encoding="utf-8") as f:
+        linhas = f.read().splitlines()
+
+    id_item = re.compile(r"^(?:M|MS|ME|MU|MX|MI)-\d{2}$")
+    total = 0
+    automatizados = 0
+    pendentes = []
+
+    for linha in linhas:
+        if not linha.strip().startswith("|"):
+            continue
+        colunas = [coluna.strip() for coluna in linha.split("|")[1:-1]]
+        if len(colunas) < 2 or not id_item.fullmatch(colunas[0]):
+            continue
+
+        total += 1
+        status = colunas[-1]
+        if "✅" in status:
+            automatizados += 1
+        else:
+            pendentes.append(colunas[0])
+
+    taxa = round(automatizados / total * 100.0, 1) if total else 0.0
+    return {
+        "total": total,
+        "automatizados": automatizados,
+        "taxa": taxa,
+        "pendentes": pendentes,
+    }
+
+
+def coletar_metricas_flaky(raiz="."):
+    raiz = pathlib.Path(raiz)
+    metricas = {"registrados": 0, "quarentena": 0, "arquivos_invalidos": []}
+
+    for diretorio, chave in (
+        (raiz / "resultados", "registrados"),
+        (raiz / "resultados-quarentena", "quarentena"),
+    ):
+        for arquivo in sorted(diretorio.glob("flaky-*.json")):
+            try:
+                with arquivo.open("r", encoding="utf-8") as f:
+                    dados = json.load(f)
+                if not isinstance(dados, list):
+                    raise ValueError("o JSON precisa conter uma lista")
+                metricas[chave] += len(dados)
+            except (OSError, ValueError):
+                metricas["arquivos_invalidos"].append(str(arquivo))
+
+    return metricas
+
+
+def resumir_suites_mobile(metricas_xml):
+    suites = {
+        nome: dados
+        for nome, dados in metricas_xml["suites"].items()
+        if nome in ("unit-mobile", "e2e-mobile-web")
+    }
+    return {
+        "suites": suites,
+        "total": sum(dados["total"] for dados in suites.values()),
+        "passaram": sum(dados["passaram"] for dados in suites.values()),
+        "falharam": sum(dados["falharam"] for dados in suites.values()),
+    }
+
+
 def coletar_taxa_pipeline_7_dias():
     token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPOSITORY", "kaykyDias04/SOS_Cidade_5P")
@@ -228,9 +303,22 @@ def calcular_semaforo(metricas_xml, metricas_backlog, metricas_pipeline):
     }
 
 
-def gerar_relatorio_tecnico_html(m_xml, m_backlog, m_pipe, semaforo, caminho_saida="relatorios/relatorio-tecnico.html"):
+def gerar_relatorio_tecnico_html(
+    m_xml,
+    m_backlog,
+    m_pipe,
+    semaforo,
+    caminho_saida="relatorios/relatorio-tecnico.html",
+    m_mobile=None,
+    m_flaky=None,
+):
     os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
     data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    if m_mobile is None:
+        m_mobile = coletar_cobertura_mobile()
+    if m_flaky is None:
+        m_flaky = coletar_metricas_flaky()
+    suites_mobile = resumir_suites_mobile(m_xml)
 
     linhas_suites = ""
     for nome, dados in m_xml["suites"].items():
@@ -247,6 +335,26 @@ def gerar_relatorio_tecnico_html(m_xml, m_backlog, m_pipe, semaforo, caminho_sai
             <td>{tempo_alerta}</td>
         </tr>
         """
+
+    linhas_suites_mobile = ""
+    for nome, dados in suites_mobile["suites"].items():
+        limite = LIMITES_TEMPO[nome]
+        tempo = (
+            f"<span style='color:#dc2626'>⚠️ Excedeu ({dados['tempo']}s > {limite}s)</span>"
+            if dados["tempo"] > limite
+            else f"{dados['tempo']}s"
+        )
+        linhas_suites_mobile += f"""
+        <tr>
+            <td><strong>{nome}</strong></td>
+            <td>{dados['total']}</td>
+            <td>{dados['passaram']}</td>
+            <td>{dados['falharam']}</td>
+            <td>{tempo}</td>
+        </tr>
+        """
+    if not linhas_suites_mobile:
+        linhas_suites_mobile = "<tr><td colspan='5'>Nenhuma suíte mobile foi executada.</td></tr>"
 
     linhas_falhas = ""
     if m_xml["falhas_detalhes"]:
@@ -331,6 +439,19 @@ def gerar_relatorio_tecnico_html(m_xml, m_backlog, m_pipe, semaforo, caminho_sai
         <h2>3. Rastreabilidade com Backlog de Automação</h2>
         <p>Dos <strong>{m_backlog['total']} casos prioritários</strong> levantados na modelagem de risco do SOS Cidade, <strong>{m_backlog['automatizados']} estão automatizados ({m_backlog['taxa']}%)</strong>.</p>
         {'<p style="color: #d97706; font-size: 13px;">⚠️ <strong>Pendências conhecidas no backend:</strong> ' + '<br>'.join(m_backlog['pendentes']) + '</p>' if m_backlog['pendentes'] else ''}
+
+        <h2>4. Qualidade Mobile e Testes Instáveis</h2>
+        <p>Backlog mobile: <strong>{m_mobile['automatizados']}/{m_mobile['total']} itens concluídos ({m_mobile['taxa']}%)</strong>.</p>
+        <table>
+            <thead>
+                <tr><th>Suíte mobile</th><th>Executados</th><th>Aprovados</th><th>Falhas</th><th>Duração</th></tr>
+            </thead>
+            <tbody>{linhas_suites_mobile}</tbody>
+        </table>
+        <p>Falhas mobile nesta execução: <strong>{suites_mobile['falharam']}</strong>.
+        Testes instáveis registrados: <strong>{m_flaky['registrados']}</strong>;
+        em quarentena: <strong>{m_flaky['quarentena']}</strong>.</p>
+        {'<p style="color:#d97706">Arquivos de instabilidade inválidos: ' + '<br>'.join(m_flaky['arquivos_invalidos']) + '</p>' if m_flaky['arquivos_invalidos'] else ''}
     </div>
 </body>
 </html>
@@ -340,9 +461,29 @@ def gerar_relatorio_tecnico_html(m_xml, m_backlog, m_pipe, semaforo, caminho_sai
     return caminho_saida
 
 
-def gerar_relatorio_negocio_html(m_xml, m_backlog, m_pipe, semaforo, caminho_saida="relatorios/relatorio-negocio.html"):
+def gerar_relatorio_negocio_html(
+    m_xml,
+    m_backlog,
+    m_pipe,
+    semaforo,
+    caminho_saida="relatorios/relatorio-negocio.html",
+    m_mobile=None,
+    m_flaky=None,
+):
     os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
     data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    if m_mobile is None:
+        m_mobile = coletar_cobertura_mobile()
+    if m_flaky is None:
+        m_flaky = coletar_metricas_flaky()
+    suites_mobile = resumir_suites_mobile(m_xml)
+    if suites_mobile["total"]:
+        status_mobile = (
+            f"{suites_mobile['passaram']} de {suites_mobile['total']} testes mobile passaram; "
+            f"{suites_mobile['falharam']} falharam nesta execução."
+        )
+    else:
+        status_mobile = "Nenhuma suíte mobile foi executada nesta execução."
 
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -414,6 +555,17 @@ def gerar_relatorio_negocio_html(m_xml, m_backlog, m_pipe, semaforo, caminho_sai
                 <li><strong>Recomendação de Release:</strong> A versão atual é estável para homologação, devendo a squad priorizar a máquina de estados de status na próxima sprint para elevar o indicador a <em>Verde</em>.</li>
             </ul>
         </div>
+
+        <div class="secao">
+            <h3>📱 Aplicativo Mobile</h3>
+            <ul>
+                <li><strong>Fluxos protegidos no backlog:</strong> {m_mobile['automatizados']} de {m_mobile['total']} itens marcados como concluídos ({m_mobile['taxa']}%).</li>
+                <li><strong>Execução desta versão:</strong> {status_mobile}</li>
+                <li><strong>Regras cobertas:</strong> login e cadastro, validação de denúncia, sessão, armazenamento seguro e cache offline.</li>
+                <li><strong>Testes instáveis:</strong> {m_flaky['registrados']} registrados e {m_flaky['quarentena']} em quarentena.</li>
+                <li><strong>Risco conhecido:</strong> os testes atuais são unitários; não percorrem telas, permissões ou comportamento nativo em Android ou iOS.</li>
+            </ul>
+        </div>
     </div>
 </body>
 </html>
@@ -423,10 +575,16 @@ def gerar_relatorio_negocio_html(m_xml, m_backlog, m_pipe, semaforo, caminho_sai
     return caminho_saida
 
 
-def publicar_github_summary(m_xml, m_backlog, m_pipe, semaforo):
+def publicar_github_summary(m_xml, m_backlog, m_pipe, semaforo, m_mobile=None, m_flaky=None):
     resumo_caminho = os.environ.get("GITHUB_STEP_SUMMARY")
     if not resumo_caminho:
         return
+
+    if m_mobile is None:
+        m_mobile = coletar_cobertura_mobile()
+    if m_flaky is None:
+        m_flaky = coletar_metricas_flaky()
+    suites_mobile = resumir_suites_mobile(m_xml)
 
     md = f"""# 🏙️ Painel de Qualidade e Métricas da Pipeline
 
@@ -441,8 +599,11 @@ def publicar_github_summary(m_xml, m_backlog, m_pipe, semaforo):
 | :--- | :---: | :---: | :---: |
 | **Taxa Global de Aprovação** | **{m_xml['taxa_geral']}%** ({m_xml['passaram']}/{m_xml['total']}) | 100% | {'✅ Aprovado' if m_xml['taxa_geral'] == 100.0 else '❌ Falha Crítica'} |
 | **Cobertura de Riscos do Backlog** | **{m_backlog['taxa']}%** ({m_backlog['automatizados']}/{m_backlog['total']}) | 100% | {'✅ Excelente' if m_backlog['taxa'] == 100.0 else '🟡 Risco Mapeado'} |
+| **Cobertura do Backlog Mobile** | **{m_mobile['taxa']}%** ({m_mobile['automatizados']}/{m_mobile['total']}) | 100% | {'✅ Excelente' if m_mobile['taxa'] == 100.0 else '🟡 Risco Mapeado'} |
 | **Estabilidade da Pipeline (7 dias)** | **{m_pipe['taxa']}%** ({m_pipe['sucessos']}/{m_pipe['total_runs']}) | ≥ 90% | {'✅ Estável' if m_pipe['taxa'] >= 90.0 else '❌ Instável'} |
 | **Total de Falhas Identificadas** | **{m_xml['falharam']}** | 0 | {'✅ Nenhuma' if m_xml['falharam'] == 0 else f'❌ {m_xml["falharam"]} erro(s)'} |
+| **Testes instáveis registrados** | **{m_flaky['registrados']}** | 0 | {'✅ Nenhum' if m_flaky['registrados'] == 0 else '🟡 Investigar'} |
+| **Testes instáveis em quarentena** | **{m_flaky['quarentena']}** | 0 | {'✅ Nenhum' if m_flaky['quarentena'] == 0 else '🟡 Revisar quarentena'} |
 
 ---
 
@@ -454,6 +615,21 @@ def publicar_github_summary(m_xml, m_backlog, m_pipe, semaforo):
     for nome, dados in m_xml["suites"].items():
         md += f"| `{nome}` | {dados['total']} | {dados['passaram']} | {dados['falharam']} | **{dados['taxa']}%** | {dados['tempo']}s |\n"
 
+    md += f"""
+---
+### 📱 Qualidade Mobile
+
+| Indicador | Resultado |
+| :--- | :--- |
+| Suítes mobile executadas | {len(suites_mobile['suites'])} |
+| Testes mobile | {suites_mobile['passaram']} aprovados / {suites_mobile['total']} executados |
+| Falhas mobile | {suites_mobile['falharam']} |
+| Cobertura do backlog mobile | {m_mobile['automatizados']}/{m_mobile['total']} itens ({m_mobile['taxa']}%) |
+| Instáveis registrados / em quarentena | {m_flaky['registrados']} / {m_flaky['quarentena']} |
+
+A suíte mobile atual verifica regras e serviços; não percorre telas nem valida o app nativo em Android ou iOS.
+
+"""
     md += """
 ---
 *Relatórios HTML completos disponíveis nos Artefatos da Execução (`relatorio-tecnico.html` e `relatorio-negocio.html`).*
@@ -466,12 +642,14 @@ def main():
     pasta_xml = sys.argv[1] if len(sys.argv) > 1 else "resultados"
     m_xml = coletar_metricas_xml(pasta_xml)
     m_backlog = coletar_cobertura_backlog()
+    m_mobile = coletar_cobertura_mobile()
+    m_flaky = coletar_metricas_flaky()
     m_pipe = coletar_taxa_pipeline_7_dias()
     semaforo = calcular_semaforo(m_xml, m_backlog, m_pipe)
 
-    gerar_relatorio_tecnico_html(m_xml, m_backlog, m_pipe, semaforo)
-    gerar_relatorio_negocio_html(m_xml, m_backlog, m_pipe, semaforo)
-    publicar_github_summary(m_xml, m_backlog, m_pipe, semaforo)
+    gerar_relatorio_tecnico_html(m_xml, m_backlog, m_pipe, semaforo, m_mobile=m_mobile, m_flaky=m_flaky)
+    gerar_relatorio_negocio_html(m_xml, m_backlog, m_pipe, semaforo, m_mobile=m_mobile, m_flaky=m_flaky)
+    publicar_github_summary(m_xml, m_backlog, m_pipe, semaforo, m_mobile=m_mobile, m_flaky=m_flaky)
 
 
 if __name__ == "__main__":

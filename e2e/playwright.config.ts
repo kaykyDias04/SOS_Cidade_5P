@@ -1,6 +1,8 @@
 import path from 'path';
 import { defineConfig, devices } from '@playwright/test';
 
+const raizProjeto = path.resolve(__dirname, '..');
+
 /**
  * Configuração do Playwright para os testes E2E do SOS-Cidade.
  *
@@ -10,8 +12,19 @@ import { defineConfig, devices } from '@playwright/test';
  * backend em http://localhost:8000 (conforme docker-compose.yml do projeto).
  */
 const quarantine = process.env.TEST_MODE === 'quarantine';
-const retries = Number(process.env.QUARANTINE_RETRIES ?? 2);
-if (!Number.isInteger(retries) || retries < 0 || retries > 20) throw new Error('QUARANTINE_RETRIES inválido');
+const quarantineRetries = Number(process.env.QUARANTINE_RETRIES ?? 2);
+if (!Number.isInteger(quarantineRetries) || quarantineRetries < 0 || quarantineRetries > 20) throw new Error('QUARANTINE_RETRIES inválido');
+const reportDir = process.env.TEST_REPORT_DIR;
+const junitOutput = process.env.E2E_JUNIT_FILE
+  ? path.resolve(raizProjeto, process.env.E2E_JUNIT_FILE)
+  : quarantine && reportDir
+    ? path.join(reportDir, 'e2e.xml')
+    : path.resolve(raizProjeto, 'resultados/e2e.xml');
+const htmlOutput = process.env.PLAYWRIGHT_HTML_REPORT
+  ? path.resolve(raizProjeto, process.env.PLAYWRIGHT_HTML_REPORT)
+  : quarantine && reportDir
+    ? path.join(reportDir, 'html')
+    : path.resolve(__dirname, 'playwright-report');
 
 export default defineConfig({
   grep: quarantine ? /(?:^|\s)@flaky(?:\s|$)/ : undefined,
@@ -20,15 +33,16 @@ export default defineConfig({
   outputDir: process.env.TEST_REPORT_DIR ? path.join(process.env.TEST_REPORT_DIR, 'test-results') : 'test-results',
   testDir: './tests',
   fullyParallel: false, // os testes compartilham o mesmo backend/banco, então rodam em série
-  retries: quarantine ? retries : 0,
+  retries: quarantine ? quarantineRetries : process.env.CI ? 1 : 0,
   workers: 1,
   // junit: resultado em XML para a pipeline (artefato e métricas).
   // Contrato: resultados/e2e.xml na raiz do repositório.
   reporter: [
-    ['html', { open: 'never', outputFolder: quarantine ? path.join(process.env.TEST_REPORT_DIR!, 'html') : 'playwright-report' }],
+    ['html', { open: 'never', outputFolder: htmlOutput }],
     ['list'],
     [path.resolve(__dirname, '../scripts/test-management/playwright-reporter.cjs')],
-    ['junit', { outputFile: quarantine ? path.join(process.env.TEST_REPORT_DIR!, 'e2e.xml') : path.resolve(__dirname, '../resultados/e2e.xml') }],
+    ['junit', { outputFile: junitOutput }],
+    [path.resolve(__dirname, 'reporters/flaky-reporter.ts')],
   ],
   timeout: 30_000,
 

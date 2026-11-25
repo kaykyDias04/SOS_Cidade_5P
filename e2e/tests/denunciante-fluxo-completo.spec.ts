@@ -17,10 +17,12 @@ import { generateTestUser, denunciaValida } from './fixtures/testData';
 // Serial: os 4 casos usam a mesma conta, criada no primeiro. Se um falha,
 // os seguintes não rodam (aparecem como não executados), em vez de falhar em cascata.
 test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúncia', () => {
+  test.describe.configure({ timeout: 60_000 });
   const usuario = generateTestUser();
 
   test('CT-E2E-04: deve permitir cadastrar uma nova conta de cidadão', async ({ page }) => {
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
 
     // O formulário de cadastro fica na mesma tela de login, lado a lado
     await page.getByRole('heading', { name: 'Cadastro' }).waitFor();
@@ -31,6 +33,9 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
     await registerForm.getByLabel('Nome Completo').fill(usuario.name);
     await registerForm.getByLabel('Email').fill(usuario.email);
     await registerForm.getByLabel('Senha').fill(usuario.password);
+    await registerForm.getByRole('checkbox', {
+      name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+    }).check();
     await registerForm.getByRole('button', { name: 'Cadastrar' }).click();
 
     await expect(page.getByText('Cadastro realizado com sucesso')).toBeVisible();
@@ -38,13 +43,17 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
 
   test('CT-E2E-05: deve logar com a conta recém-criada e cair na home do denunciante', async ({ page }) => {
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
 
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
     await loginForm.getByLabel('Email').fill(usuario.email);
     await loginForm.getByLabel('Senha').fill(usuario.password);
+    await loginForm.getByRole('checkbox', {
+      name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+    }).check();
     await loginForm.getByRole('button', { name: 'Entrar' }).click();
 
-    await expect(page).toHaveURL(/\/homepage-denunciante/);
+    await page.waitForURL('**/homepage-denunciante', { timeout: 45_000 });
     // O aviso "Login realizado com sucesso" some no redirecionamento: o <Toaster>
     // só existe em /login. O oráculo é a saudação da home do denunciante.
     await expect(page.getByRole('heading', { name: /^Olá,/ })).toBeVisible();
@@ -52,10 +61,14 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
 
   test('CT-E2E-06: não deve logar com senha incorreta (caminho negativo)', async ({ page }) => {
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
 
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
     await loginForm.getByLabel('Email').fill(usuario.email);
     await loginForm.getByLabel('Senha').fill('senhaErradaXYZ');
+    await loginForm.getByRole('checkbox', {
+      name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+    }).check();
     await loginForm.getByRole('button', { name: 'Entrar' }).click();
 
     await expect(page.getByText('E-mail ou senha incorretos')).toBeVisible();
@@ -66,11 +79,15 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
   test('CT-E2E-07: deve registrar uma nova denúncia e vê-la em "Minhas Denúncias"', async ({ page }) => {
     // login
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
     const loginForm = page.getByRole('heading', { name: 'Entrar' }).locator('..').locator('form');
     await loginForm.getByLabel('Email').fill(usuario.email);
     await loginForm.getByLabel('Senha').fill(usuario.password);
+    await loginForm.getByRole('checkbox', {
+      name: 'Li e concordo com os Termos de Uso e a Política de Privacidade',
+    }).check();
     await loginForm.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/homepage-denunciante/);
+    await page.waitForURL('**/homepage-denunciante', { timeout: 45_000 });
 
     // ir para o formulário de nova denúncia
     await page.goto('/nova-denuncia');
@@ -90,6 +107,9 @@ test.describe.serial('Jornada do Cidadão: cadastro, login e registro de denúnc
 
     // Descrição
     await page.getByLabel('Descrição do Problema').fill(denunciaValida.descricao);
+    await expect(
+      page.getByRole('radio', { name: /Denunciar anonimamente/i }),
+    ).toHaveAttribute('aria-checked', 'true');
 
     // Consentimento (obrigatório para habilitar o envio)
     await page

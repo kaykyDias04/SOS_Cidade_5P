@@ -21,6 +21,7 @@ export function resposta(corpo, titulo) {
 export function planejar(corpo, atuais) {
   const tipo = resposta(corpo, 'Tipo de falha');
   const prioridade = resposta(corpo, 'Prioridade');
+  const suite = resposta(corpo, 'Suíte afetada');
   if (tipo === null && prioridade === null) return null; // não é issue do formulário
 
   const desejadas = new Set();
@@ -35,6 +36,12 @@ export function planejar(corpo, atuais) {
   const instavel = resposta(corpo, 'O teste é instável?');
   const adicionar = [...desejadas].filter((l) => !atuais.includes(l));
   const remover = atuais.filter((l) => GERENCIADAS.test(l) && !desejadas.has(l));
+  if (suite !== null && suite.startsWith('Mobile') && !atuais.includes('mobile')) {
+    adicionar.push('mobile');
+  }
+  if (suite !== null && !suite.startsWith('Mobile') && atuais.includes('mobile')) {
+    remover.push('mobile');
+  }
   if (instavel === 'Sim' && !atuais.includes('flaky')) adicionar.push('flaky');
   if (instavel !== 'Sim' && atuais.includes('flaky')) remover.push('flaky');
   return { adicionar, remover };

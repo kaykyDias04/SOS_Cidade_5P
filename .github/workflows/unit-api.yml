@@ -29,7 +29,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: |
+            backend/package-lock.json
+            mobile/package-lock.json
 
       - name: Instalar dependências do backend
         run: npm ci --prefix backend
@@ -43,6 +45,10 @@ jobs:
       - name: Validar quarentena e preservação do quality gate
         run: npm run test:management:selftest
 
+      - name: Instalar dependências do mobile
+        if: ${{ !cancelled() }}
+        run: npm ci --prefix mobile
+
       # Frontend e backend em passos separados: se um falhar, o outro roda mesmo
       # assim e o seu XML não fica faltando nas métricas.
       - name: Testes unitários (frontend)
@@ -51,6 +57,10 @@ jobs:
       - name: Testes unitários (backend)
         if: ${{ !cancelled() }}
         run: npm run test:unit:backend
+
+      - name: Testes unitários (mobile)
+        if: ${{ !cancelled() }}
+        run: npm run test:unit:mobile
 
       - name: Testes de API (com cobertura)
         if: ${{ !cancelled() }}
@@ -75,7 +85,7 @@ jobs:
           path: relatorios/
           retention-days: 30
 
-      # Sobe sempre, verde ou vermelho: os XML alimentam as métricas e os relatórios.
+      # resultados/ inclui os XMLs das suítes executadas neste job.
       - name: Salvar resultados dos testes
         id: artefato
         if: ${{ !cancelled() }}
@@ -102,7 +112,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: ./.github/actions/gerar-relatorios
         with:
-          pasta-xml: resultados
+          pasta-xml: resultados/
 
       # Só no push na main: em PR, falhar durante o desenvolvimento é normal e
       # viraria barulho. Na main, falha quer dizer que algo quebrado entrou.

@@ -29,6 +29,7 @@ runs:
         COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
         ARTEFATO_URL: ${{ inputs.artefato-url }}
         SCRIPT_FALHAS: ${{ github.action_path }}/falhas.py
+        FORM_URL: ${{ github.server_url }}/${{ github.repository }}/issues/new?template=manutencao.yml
       run: |
         set -euo pipefail
 
@@ -79,6 +80,8 @@ runs:
           {
             echo "A pipeline falhou de novo em ${quando}."
             echo
+            echo "Triagem: classifique a falha no formulário de manutenção: ${FORM_URL}"
+            echo
             cat "$RUNNER_TEMP/detalhes.md"
           } > "$RUNNER_TEMP/corpo.md"
           tentar gh issue comment "$existente" --body-file "$RUNNER_TEMP/corpo.md"
@@ -86,6 +89,8 @@ runs:
         else
           {
             echo "A pipeline falhou em ${quando} e esta issue foi aberta automaticamente."
+            echo
+            echo "Triagem: classifique a falha no formulário de manutenção: ${FORM_URL}"
             echo
             cat "$RUNNER_TEMP/detalhes.md"
             echo

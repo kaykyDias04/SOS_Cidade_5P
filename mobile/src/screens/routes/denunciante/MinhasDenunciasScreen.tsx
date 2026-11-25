@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import type { ComponentProps } from 'react';
 import {
   View,
   Text,
@@ -13,17 +12,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useDenunciasStore } from '@/store/useDenunciasStore';
-import type { Denuncia } from '@/types';
 import { normalizeSituacao, SITUACAO_CONFIG, SITUACOES, type Situacao } from '@/constants';
-
-type IconName = ComponentProps<typeof Ionicons>['name'];
+import DenunciaCard from '@/components/denuncia/DenunciaCard';
+import EmptyState from '@/components/feedback/EmptyState';
+import ErrorState from '@/components/feedback/ErrorState';
+import OfflineBanner from '@/components/feedback/OfflineBanner';
+import LoadingState from '@/components/feedback/LoadingState';
+import { colors } from '@/constants/theme';
 
 export default function MinhasDenunciasScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { denuncias, loading, fetchDenuncias } = useDenunciasStore();
+  const { denuncias, loading, error, offline, cachedAt, fetchDenuncias } = useDenunciasStore();
   const [search, setSearch] = useState('');
   const [filtroSituacao, setFiltroSituacao] = useState<Situacao | null>(null);
 
@@ -31,7 +31,7 @@ export default function MinhasDenunciasScreen() {
     fetchDenuncias();
   }, []);
 
-  const minhas = denuncias.filter((d) => d.userId === user?.id);
+  const minhas = denuncias;
 
   const filtered = minhas.filter((d) => {
     const matchSearch =
@@ -45,47 +45,6 @@ export default function MinhasDenunciasScreen() {
 
   const getSituacao = (situacao: string) => SITUACAO_CONFIG[normalizeSituacao(situacao)];
 
-  const renderItem = ({ item }: { item: Denuncia }) => {
-    const sit = getSituacao(item.situacao);
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => router.push(`/detalhe-denuncia?id=${item.id}`)}
-        accessibilityLabel={`Ver detalhes de ${item.tipoDenuncia}`}
-        activeOpacity={0.75}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.tipoRow}>
-            <View style={styles.tipoDot} />
-            <Text style={styles.tipoText}>{item.tipoDenuncia}</Text>
-          </View>
-          <View style={[styles.badge, { backgroundColor: sit.bg }]}>
-            <Ionicons name={sit.icon} size={12} color={sit.text} />
-            <Text style={[styles.badgeText, { color: sit.text }]}>{sit.label}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.descText} numberOfLines={3}>{item.descricaoOcorrencia}</Text>
-
-        <View style={styles.cardFooter}>
-          <View style={styles.infoRow}>
-            <Ionicons name="location-outline" size={13} color="#9ca3af" />
-            <Text style={styles.infoText}>{item.bairroOcorrencia}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
-            <Text style={styles.infoText}>{new Date(item.dataOcorrencia).toLocaleDateString('pt-BR')}</Text>
-          </View>
-          <Text style={styles.protocoloText}>#{item.protocolo}</Text>
-        </View>
-        <View style={styles.verMaisRow}>
-          <Text style={styles.verMaisText}>Ver detalhes</Text>
-          <Ionicons name="chevron-forward" size={14} color="#6498c9" />
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
 
@@ -96,18 +55,18 @@ export default function MinhasDenunciasScreen() {
 
 
       <View style={styles.searchWrapper}>
-        <Ionicons name="search-outline" size={18} color="#9ca3af" />
+        <Ionicons name="search-outline" size={18} color={colors.gray} />
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar por tipo, bairro ou protocolo..."
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.gray}
           value={search}
           onChangeText={setSearch}
           accessibilityLabel="Buscar denúncias"
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={18} color="#9ca3af" />
+            <Ionicons name="close-circle" size={18} color={colors.gray} />
           </TouchableOpacity>
         )}
       </View>
@@ -136,21 +95,38 @@ export default function MinhasDenunciasScreen() {
       </ScrollView>
 
 
+      {offline && cachedAt ? <OfflineBanner cachedAt={cachedAt} /> : null}
+
       <FlatList
         data={filtered}
         keyExtractor={(item) => String(item.id)}
-        renderItem={renderItem}
+        renderItem={({ item }) => (
+          <DenunciaCard
+            denuncia={item}
+            variant="list"
+            onPress={() => router.push(`/detalhe-denuncia?id=${item.id}`)}
+          />
+        )}
         contentContainerStyle={{ padding: 16, gap: 12 }}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchDenuncias} />}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={56} color="#d1d5db" />
-            <Text style={styles.emptyTitle}>Nenhuma denúncia encontrada</Text>
-            <Text style={styles.emptyDesc}>
-              {search ? 'Tente outros termos de busca' : 'Suas denúncias aparecerão aqui'}
-            </Text>
-          </View>
-        }
+        ListEmptyComponent={() => {
+          if (error) {
+            return (
+              <ErrorState
+                title="Erro ao carregar denúncias"
+                message={error}
+                onRetry={fetchDenuncias}
+              />
+            );
+          }
+          if (loading) return <LoadingState message="Carregando denúncias..." />;
+          return (
+            <EmptyState
+              title="Nenhuma denúncia encontrada"
+              message={search ? 'Tente outros termos de busca' : 'Suas denúncias aparecerão aqui'}
+            />
+          );
+        }}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -158,22 +134,22 @@ export default function MinhasDenunciasScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f4f8' },
+  container: { flex: 1, backgroundColor: colors.background },
 
   header: {
-    backgroundColor: '#fff', padding: 20, paddingBottom: 14,
-    borderBottomWidth: 1, borderBottomColor: '#f0f4f8',
+    backgroundColor: colors.surface, padding: 20, paddingBottom: 14,
+    borderBottomWidth: 1, borderBottomColor: colors.background,
   },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#1e3a5f' },
-  headerSub: { fontSize: 13, color: '#9ca3af', marginTop: 2 },
+  headerTitle: { fontSize: 22, fontWeight: '800', color: colors.primaryDark },
+  headerSub: { fontSize: 13, color: colors.gray, marginTop: 2 },
 
   searchWrapper: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    margin: 16, marginBottom: 8, backgroundColor: '#fff',
+    margin: 16, marginBottom: 8, backgroundColor: colors.surface,
     borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
-    borderWidth: 1, borderColor: '#e5e7eb',
+    borderWidth: 1, borderColor: colors.border,
   },
-  searchInput: { flex: 1, fontSize: 14, color: '#111827' },
+  searchInput: { flex: 1, fontSize: 14, color: colors.inputText },
 
   filtros: {
     flexDirection: 'row', paddingHorizontal: 16, gap: 8,
@@ -181,34 +157,9 @@ const styles = StyleSheet.create({
   },
   filtroChip: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-    backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#e5e7eb',
+    backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border,
   },
-  filtroChipActive: { backgroundColor: '#6498c9', borderColor: '#6498c9' },
-  filtroText: { fontSize: 12, fontWeight: '700', color: '#6b7280' },
-  filtroTextActive: { color: '#fff' },
-
-  card: {
-    backgroundColor: '#fff', borderRadius: 18, padding: 16,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-    borderWidth: 1, borderColor: '#f0f4f8',
-  },
-  verMaisRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 2, marginTop: 10 },
-  verMaisText: { fontSize: 12, color: '#6498c9', fontWeight: '700' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  tipoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
-  tipoDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#6498c9' },
-  tipoText: { fontSize: 14, fontWeight: '800', color: '#1e3a5f', flex: 1 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-
-  descText: { fontSize: 13, color: '#4b5563', lineHeight: 19, marginBottom: 12 },
-
-  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  infoText: { fontSize: 12, color: '#9ca3af' },
-  protocoloText: { fontSize: 11, color: '#6498c9', fontWeight: '700', marginLeft: 'auto' },
-
-  emptyState: { alignItems: 'center', paddingVertical: 60, gap: 10 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#6b7280' },
-  emptyDesc: { fontSize: 13, color: '#9ca3af', textAlign: 'center' },
+  filtroChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filtroText: { fontSize: 12, fontWeight: '700', color: colors.grayDark },
+  filtroTextActive: { color: colors.surface },
 });

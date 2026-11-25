@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e-mobile-web" tests="2" failures="1" errors="0">
+  <testsuite name="smoke" tests="2" failures="1" errors="0">
+    <testcase classname="smoke" name="MS-01 gestor acessa painel" time="1.2"/>
+    <testcase classname="smoke" name="MS-02 registra denúncia" time="2.4">
+      <failure message="Expected protocol to be visible">Expected protocol to be visible</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

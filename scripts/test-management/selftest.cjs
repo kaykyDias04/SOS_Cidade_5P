@@ -82,6 +82,8 @@ test('Jest, node:test e Playwright: seleção, retentativas e gate em ambiente i
     fs.symlinkSync(path.join(root, pkg, 'node_modules'), path.join(sandbox, pkg, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   }
   fs.copyFileSync(path.join(root, 'e2e/playwright.config.ts'), path.join(sandbox, 'e2e/playwright.config.ts'));
+  fs.mkdirSync(path.join(sandbox, 'e2e/reporters'), { recursive: true });
+  fs.copyFileSync(path.join(root, 'e2e/reporters/flaky-reporter.ts'), path.join(sandbox, 'e2e/reporters/flaky-reporter.ts'));
   const jestConfig = `const path=require('path');module.exports={testEnvironment:'node',testMatch:['**/*.test.ts'],testNamePattern:process.env.TEST_MODE==='quarantine'?'(?:^|\\\\s)@flaky(?:\\\\s|$)':'^(?!.*(?:^|\\\\s)@flaky(?:\\\\s|$)).*$',reporters:['default',path.resolve(__dirname,'../scripts/test-management/jest-reporter.cjs')]};`;
   fs.writeFileSync(path.join(sandbox, 'backend/jest.config.js'), jestConfig);
   const title = 'CT-DEMO-01 exemplo @flaky';
