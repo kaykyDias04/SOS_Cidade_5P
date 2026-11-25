@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { usersAPI } from '@/services/userService';
-import type { CreateUserInput, User } from '@/types';
+import type { CreateGestorInput, User } from '@/types';
 
 export function useGestores() {
   const [gestores, setGestores] = useState<User[]>([]);
@@ -19,8 +19,8 @@ export function useGestores() {
     setLoading(false);
   }, []);
 
-  const criar = useCallback(async (data: CreateUserInput) => {
-    const response = await usersAPI.create(data);
+  const criar = useCallback(async (data: CreateGestorInput) => {
+    const response = await usersAPI.createGestor(data);
     if (response.success) {
       await listar();
     } else {

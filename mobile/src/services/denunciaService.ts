@@ -10,18 +10,27 @@ function paginationQuery(page: number, limit: number, includeMeta = false): stri
   return params.toString();
 }
 
+function addFilters(params: URLSearchParams, filtros: DenunciaFiltros): void {
+  (Object.keys(filtros) as (keyof DenunciaFiltros)[]).forEach((key) => {
+    const values = filtros[key];
+    if (Array.isArray(values)) {
+      values.filter(Boolean).forEach((value) => params.append(key, value));
+    } else if (values) {
+      params.append(key, values);
+    }
+  });
+}
+
 export const denunciasAPI = {
-  listarMinhas: async (page = 1, limit = 50) =>
-    apiRequest<PaginatedResponse<Denuncia>>(
-      `/denuncias/minhas?${paginationQuery(page, limit)}`
-    ),
+  listarMinhas: async (page = 1, limit = 50, filtros: DenunciaFiltros = {}) => {
+    const params = new URLSearchParams(paginationQuery(page, limit));
+    addFilters(params, filtros);
+    return apiRequest<PaginatedResponse<Denuncia>>(`/denuncias/minhas?${params.toString()}`);
+  },
 
   listarTodas: async (page = 1, limit = 50, filtros: DenunciaFiltros = {}) => {
     const params = new URLSearchParams(paginationQuery(page, limit, true));
-    (Object.keys(filtros) as (keyof DenunciaFiltros)[]).forEach((key) => {
-      const value = filtros[key];
-      if (value) params.append(key, value);
-    });
+    addFilters(params, filtros);
     return apiRequest<PaginatedResponse<Denuncia>>(`/denuncias?${params.toString()}`);
   },
 

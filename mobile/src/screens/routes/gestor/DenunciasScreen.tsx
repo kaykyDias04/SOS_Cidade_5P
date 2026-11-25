@@ -63,7 +63,10 @@ export default function DenunciasGestorScreen() {
       denuncia.tipoDenuncia.toLowerCase().includes(query) ||
       denuncia.bairroOcorrencia.toLowerCase().includes(query) ||
       denuncia.protocolo.toLowerCase().includes(query) ||
-      denuncia.nomeDenunciante.toLowerCase().includes(query);
+      denuncia.nomeDenunciante.toLowerCase().includes(query) ||
+      denuncia.descricaoOcorrencia.toLowerCase().includes(query) ||
+      denuncia.dataOcorrencia.toLowerCase().includes(query) ||
+      denuncia.situacao.toLowerCase().includes(query);
   });
 
   const handleUpdateStatus = async (novaSituacao: Situacao) => {

@@ -4,6 +4,7 @@ export type {
   AuthLoginResponse,
   AuthLogoutResponse,
   AuthUser,
+  CreateGestorInput,
   CreateUserInput,
   User,
   UserRole,

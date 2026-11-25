@@ -23,6 +23,12 @@ export type CreateUserInput = {
   acceptedPrivacy?: boolean;
 };
 
+export type CreateGestorInput = {
+  email: string;
+  name: string;
+  password: string;
+};
+
 export type AuthLoginResponse = {
   user: User;
   token: string;

@@ -7,12 +7,26 @@ import { colors } from '@/constants/theme';
 interface FiltroLinhaProps {
   titulo: string;
   opcoes: string[];
-  valor?: string;
-  onChange: (value: string | undefined) => void;
+  valor?: string | string[];
+  onChange: (value: string | string[] | undefined) => void;
+  multiplo?: boolean;
 }
 
-function FiltroLinha({ titulo, opcoes, valor, onChange }: FiltroLinhaProps) {
+function FiltroLinha({ titulo, opcoes, valor, onChange, multiplo = false }: FiltroLinhaProps) {
   if (opcoes.length === 0) return null;
+  const selecionados = Array.isArray(valor) ? valor : valor ? [valor] : [];
+
+  const selecionar = (opcao: string | undefined) => {
+    if (opcao === undefined || !multiplo) {
+      onChange(opcao);
+      return;
+    }
+
+    const novos = selecionados.includes(opcao)
+      ? selecionados.filter((item) => item !== opcao)
+      : [...selecionados, opcao];
+    onChange(novos.length > 0 ? novos : undefined);
+  };
 
   return (
     <ScrollView
@@ -26,8 +40,10 @@ function FiltroLinha({ titulo, opcoes, valor, onChange }: FiltroLinhaProps) {
         <Chip
           key={String(opcao)}
           label={opcao ?? 'Todos'}
-          selected={valor === opcao}
-          onPress={() => onChange(opcao)}
+          selected={multiplo
+            ? (opcao === undefined ? selecionados.length === 0 : selecionados.includes(opcao))
+            : valor === opcao}
+          onPress={() => selecionar(opcao)}
           accessibilityLabel={`Filtrar ${titulo} ${opcao ?? 'todos'}`}
         />
       ))}
@@ -48,19 +64,25 @@ export default function FiltroBar({ filtros, opcoes, onChange }: FiltroBarProps)
         titulo="Status"
         opcoes={SITUACOES}
         valor={filtros.situacao}
-        onChange={(situacao) => onChange({ situacao })}
+        onChange={(situacao) => {
+          if (typeof situacao === 'string' || situacao === undefined) {
+            onChange({ situacao });
+          }
+        }}
       />
       <FiltroLinha
         titulo="Tipo"
         opcoes={opcoes.tipos}
         valor={filtros.tipoDenuncia}
         onChange={(tipoDenuncia) => onChange({ tipoDenuncia })}
+        multiplo
       />
       <FiltroLinha
         titulo="Região"
         opcoes={opcoes.bairros}
         valor={filtros.bairroOcorrencia}
         onChange={(bairroOcorrencia) => onChange({ bairroOcorrencia })}
+        multiplo
       />
     </>
   );
