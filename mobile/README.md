@@ -45,11 +45,36 @@ A versão web usa cookie (`httpOnly`) pra guardar a sessão — isso não existe
 3. `npx expo start`
 4. Escanear o QR code com o app **Expo Go** (Android/iOS) ou apertar `a`/`i` no terminal pra abrir num emulador
 
-## O que já está pronto (ponto de partida)
+## Integração e autorização
 
-- Telas de login, cadastro, denúncias e gestão integradas às rotas do Expo Router
-- Implementações das telas separadas dos arquivos de rota em `src/screens/routes/`
+- O cadastro público cria somente `DENUNCIANTE` e exige aceite explícito dos documentos legais.
+- A criação administrativa de gestores usa `POST /users/gestores`, protegido para usuários `GESTOR`; não confie em papéis enviados pelo cliente.
+- `POST /denuncias` aceita somente `DENUNCIANTE`. Token ausente, inválido ou expirado retorna `401`; usuário autenticado sem permissão retorna `403`.
+- As listas permitem filtrar por situação e por múltiplos tipos e bairros. Os filtros do denunciante também são enviados ao endpoint `/denuncias/minhas`.
+- A interface de gestores e a interface pública consomem os mesmos endpoints e contratos do Backend.
 
-## O que falta (pro grupo continuar)
+## Testes automatizados
 
-- Tratar estados de falta de conexão com a internet
+Na pasta `mobile/`, rode a suíte unitária e de serviços:
+
+```powershell
+npm run test:ci
+```
+
+Os testes de integração fazem chamadas reais dos serviços Mobile contra uma API local com banco descartável. Inicie o stack de desenvolvimento na raiz do repositório (`docker compose up --build -d db redis api`), configure a URL, a flag de segurança e as contas de teste criadas pelo seed, e execute:
+
+```powershell
+$env:EXPO_PUBLIC_API_URL = "http://localhost:8000"
+$env:MOBILE_INTEGRATION_TESTS = "1"
+$env:MOBILE_TEST_DENUNCIANTE_EMAIL = "denunciante.teste@soscidade.com"
+$env:MOBILE_TEST_DENUNCIANTE_PASSWORD = "Teste@123"
+$env:MOBILE_TEST_GESTOR_EMAIL = "gestor1.teste@soscidade.com"
+$env:MOBILE_TEST_GESTOR_PASSWORD = "Teste@123"
+npm run test:integration:backend
+```
+
+O workflow [`mobile-backend-integration.yml`](../.github/workflows/mobile-backend-integration.yml) pode ser iniciado manualmente em **Actions → Mobile + Backend integration → Run workflow** e também roda em PRs que alteram Mobile ou Backend. A suite de integração é de API/serviços; não substitui testes de interface nativa em Android ou iOS.
+
+Os testes de integração aceitam somente `localhost` ou `127.0.0.1`, criam registros e tentam removê-los ao final. Nunca os execute contra produção nem contra um banco compartilhado. A última execução validada teve 45 testes unitários/de serviços e 10 cenários de integração.
+
+As coberturas atuais e o backlog restante estão em [`testes/backlog-testes-mobile.md`](./testes/backlog-testes-mobile.md). Fluxos Maestro, validação em emuladores e algumas situações offline continuam pendentes.

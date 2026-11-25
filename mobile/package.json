@@ -45,6 +45,7 @@
   "scripts": {
     "test": "jest",
     "test:ci": "jest --ci --runInBand",
+    "test:integration:backend": "jest --config jest.integration.config.js --runInBand",
     "start": "expo start",
     "start:go": "expo start --go --lan",
     "start:go:tunnel": "expo start --go --tunnel",

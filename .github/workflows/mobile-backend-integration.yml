@@ -1,0 +1,90 @@
+name: mobile-backend-integration
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - 'backend/**'
+      - '.github/workflows/mobile-backend-integration.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-backend-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-backend-integration:
+    name: mobile-backend-integration
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: soscidade
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-retries 12
+
+    env:
+      CI: 'true'
+      DATABASE_URL: postgresql://postgres@localhost:5432/soscidade
+      DIRECT_URL: postgresql://postgres@localhost:5432/soscidade
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: mobile-backend-integration-secret
+      DATA_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      EXPO_PUBLIC_API_URL: http://localhost:8000
+      MOBILE_INTEGRATION_TESTS: '1'
+      MOBILE_TEST_DENUNCIANTE_EMAIL: denunciante.teste@soscidade.com
+      MOBILE_TEST_DENUNCIANTE_PASSWORD: 'Teste@123'
+      MOBILE_TEST_GESTOR_EMAIL: gestor1.teste@soscidade.com
+      MOBILE_TEST_GESTOR_PASSWORD: 'Teste@123'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            mobile/package-lock.json
+
+      - name: Instalar dependências do backend e Mobile
+        run: |
+          npm ci --prefix backend
+          npm ci --prefix mobile
+
+      - name: Preparar banco de dados descartável
+        working-directory: backend
+        run: npx prisma migrate deploy && npx prisma db seed
+
+      - name: Compilar e iniciar somente o Backend
+        run: |
+          npm run build --prefix backend
+          nohup node backend/dist/server.js > backend/backend.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:8000/health; do sleep 1; done'
+
+      - name: Executar integração Mobile + Backend
+        run: |
+          mkdir -p resultados
+          npm run test:integration:backend --prefix mobile
+
+      - name: Salvar relatório da integração
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-backend-integration
+          path: |
+            resultados/integration-mobile-backend.xml
+            backend/backend.log
+          retention-days: 30
